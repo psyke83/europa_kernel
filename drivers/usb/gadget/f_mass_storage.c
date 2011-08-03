@@ -1323,6 +1323,7 @@ static int do_inquiry(struct fsg_dev *fsg, struct fsg_buffhd *bh)
 
 	static char vendor_id[] = "SAMSUNG ";
 	static char product_id[] = "GT-I5500 Card";
+	//static char product_id[] = "GT-I5503T Card";
 	
 	if (!fsg->curlun) {		/* Unsupported LUNs are okay */
 		fsg->bad_lun_okay = 1;

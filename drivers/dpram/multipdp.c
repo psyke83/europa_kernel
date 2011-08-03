@@ -446,7 +446,7 @@ static ssize_t store_waketime(struct device *d,
 	return count;
 }
 
-static DEVICE_ATTR(waketime, S_IRUGO | S_IWUGO, show_waketime, store_waketime);
+static DEVICE_ATTR(waketime, 0664, show_waketime, store_waketime);
 
 
 /*

@@ -544,11 +544,11 @@ wait_for_int:
 			goto out_err;
 		}
 		if (dev->err) {
-			dev_err(dev->dev,
-				"Error during data xfer (%d)\n",
-				dev->err);
-			ret = dev->err;
-			goto out_err;
+			//dev_err(dev->dev,
+			//	"Error during data xfer (%d)\n",
+			//	dev->err);
+			//ret = dev->err;
+			//goto out_err;
 		}
 
 		if (msgs->flags & I2C_M_RD)

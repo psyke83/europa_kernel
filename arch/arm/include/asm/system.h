@@ -60,8 +60,6 @@
 #include <linux/linkage.h>
 #include <linux/irqflags.h>
 
-#include <asm/outercache.h>
-
 #define __exception	__attribute__((section(".exception.text")))
 
 void cpu_idle_wait(void);
@@ -144,9 +142,9 @@ extern unsigned int user_debug;
 #endif
 
 #if __LINUX_ARM_ARCH__ >= 7 || defined(CONFIG_SMP) || defined(CONFIG_ARCH_MSM)
-#define mb()		do { dsb(); outer_sync(); } while (0)
+#define mb()		dmb()
 #define rmb()		dmb()
-#define wmb()		mb()
+#define wmb()		dmb()
 #else
 #define mb()	do { if (arch_is_coherent()) dmb(); else barrier(); } while (0)
 #define rmb()	do { if (arch_is_coherent()) dmb(); else barrier(); } while (0)
@@ -158,9 +156,9 @@ extern unsigned int user_debug;
 #define smp_rmb()	barrier()
 #define smp_wmb()	barrier()
 #else
-#define smp_mb()	dmb()
-#define smp_rmb()	dmb()
-#define smp_wmb()	dmb()
+#define smp_mb()	mb()
+#define smp_rmb()	rmb()
+#define smp_wmb()	wmb()
 #endif
 
 #define read_barrier_depends()		do { } while(0)

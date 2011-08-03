@@ -669,7 +669,7 @@ kgsl_mmu_map(struct kgsl_pagetable *pagetable,
 
 	mb();
 	dsb();
-	outer_sync();
+	//outer_sync();
 
 	/* Invalidate tlb only if current page table used by GPU is the
 	 * pagetable that we used to allocate */
@@ -725,7 +725,7 @@ kgsl_mmu_unmap(struct kgsl_pagetable *pagetable, unsigned int gpuaddr,
 
 	mb();
 	dsb();
-	outer_sync();
+	//outer_sync();
 	spin_unlock(&pagetable->lock);
 
 	gen_pool_free(pagetable->pool, gpuaddr, range);

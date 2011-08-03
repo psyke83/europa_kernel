@@ -37,7 +37,6 @@
  */
 
 #include <linux/pci.h>
-#include <linux/slab.h>
 #include <linux/dma-mapping.h>
 #include "drmP.h"
 
@@ -155,8 +154,6 @@ int drm_get_pci_dev(struct pci_dev *pdev, const struct pci_device_id *ent,
 	pci_set_master(pdev);
 
 	dev->pdev = pdev;
-	dev->dev = &pdev->dev;
-
 	dev->pci_device = pdev->device;
 	dev->pci_vendor = pdev->vendor;
 

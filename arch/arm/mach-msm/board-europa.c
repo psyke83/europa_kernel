@@ -2124,7 +2124,11 @@ msm_i2c_gpio_config(int iface, int config_type)
 }
 
 static struct msm_i2c_platform_data msm_i2c_pdata = {
+#if 0//PCAM : Fast I2C
+	.clk_freq = 384000,
+#else//ORG : Normal I2C
 	.clk_freq = 100000,
+#endif//PCAM
 	.rmutex  = 0,
 	.pri_clk = 60,
 	.pri_dat = 61,

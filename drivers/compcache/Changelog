@@ -1,3 +1,12 @@
+version 0.7	(TBD)
+ - We can now handle any kind of I/O and not just swap. Device
+   files are also renamed from /dev/ramzswapX to /dev/zramX to
+   reflect this generic nature.
+ - Replaced ioctls with sysfs interface. This also obviates the
+   need for rzscontrol userspace utility.
+ - Removed backing swap support. See: http://lkml.org/lkml/2010/5/13/93
+ - Updated README to reflect above change.
+
 version 0.6.2	(25/1/2010)
  - Sync-up with mainline version which includes changes below.
  - Lots and lots of cleanups.

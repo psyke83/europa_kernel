@@ -154,8 +154,8 @@ static void report_key(struct gpio_kp *kp, int key_index, int out, int in)
 #if defined(CONFIG_MACH_CALLISTO) || defined(CONFIG_MACH_CRONIN)
 				printk("key event (keycode:%d, pressed:%d)\n", keycode, pressed);	//sec: sm.kim
 #else
-				printk("key event (keycode:%d, pressed:%d), wlan_debug_step=%d\n", 
-						keycode, pressed, wlan_debug_step);	// sec: sm.kim
+//				printk("key event (keycode:%d, pressed:%d), wlan_debug_step=%d\n", 
+//						keycode, pressed, wlan_debug_step);	// sec: sm.kim
 #endif
 				key_pressed = pressed;
 			} else {

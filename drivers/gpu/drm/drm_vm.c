@@ -11,7 +11,6 @@
  *
  * Copyright 1999 Precision Insight, Inc., Cedar Park, Texas.
  * Copyright 2000 VA Linux Systems, Inc., Sunnyvale, California.
- * Copyright (c) 2009, Code Aurora Forum.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -37,7 +36,6 @@
 #include "drmP.h"
 #if defined(__ia64__)
 #include <linux/efi.h>
-#include <linux/slab.h>
 #endif
 
 static void drm_vm_open(struct vm_area_struct *vma);

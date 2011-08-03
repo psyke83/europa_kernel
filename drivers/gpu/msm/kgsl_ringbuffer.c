@@ -695,7 +695,7 @@ kgsl_ringbuffer_addcmds(struct kgsl_ringbuffer *rb,
 	GSL_RB_WRITE(ringcmds, rcmd_gpu, rb->timestamp);
 
 	mb();
-	outer_sync();
+	//outer_sync();
 
 	if (!(flags & KGSL_CMD_FLAGS_NO_TS_CMP)) {
 		/* Conditional execution based on memory values */

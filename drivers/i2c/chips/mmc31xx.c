@@ -42,9 +42,9 @@
 #define DEBUG					0
 #define MAX_FAILURE_COUNT		3
 
-#define MMC31XX_DELAY_TM		20	/* ms */
-#define MMC31XX_DELAY_SET		20	/* ms */
-#define MMC31XX_DELAY_RST		20	/* ms */
+#define MMC31XX_DELAY_TM		10	/* ms */
+#define MMC31XX_DELAY_SET		10	/* ms */
+#define MMC31XX_DELAY_RST		10	/* ms */
 #define MMC31XX_DELAY_STDN	1	/* ms */
 
 #define MMC31XX_RETRY_COUNT	3

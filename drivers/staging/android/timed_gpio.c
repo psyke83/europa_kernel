@@ -1,4 +1,3 @@
-/* #warning compile out */
 /* drivers/misc/timed_gpio.c
  *
  * Copyright (C) 2008 Google, Inc.

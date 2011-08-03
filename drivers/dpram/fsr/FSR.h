@@ -4,6 +4,15 @@
  *   @section Intro Intro
  *       Flash Translation Layer for Flex-OneNAND and OneNAND
  *   
+ *     @MULTI_BEGIN@ @COPYRIGHT_DEFAULT
+ *     @section Copyright COPYRIGHT_DEFAULT
+ *            COPYRIGHT. SAMSUNG ELECTRONICS CO., LTD.
+ *                                    ALL RIGHTS RESERVED
+ *     Permission is hereby granted to licensees of Samsung Electronics Co., Ltd. products
+ *     to use this computer program only in accordance 
+ *     with the terms of the SAMSUNG FLASH MEMORY DRIVER SOFTWARE LICENSE AGREEMENT.
+ *     @MULTI_END@
+ *
  *     @MULTI_BEGIN@ @COPYRIGHT_GPL
  *     @section Copyright COPYRIGHT_GPL
  *            COPYRIGHT. SAMSUNG ELECTRONICS CO., LTD.

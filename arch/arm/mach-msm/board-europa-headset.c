@@ -252,7 +252,7 @@ static ssize_t h2w_print_name(struct switch_dev *sdev, char *buf)
 	case H2W_SEC_HEADSET:
 		return sprintf(buf, "H2W_SEC_HEADSET\n");
 	case H2W_NORMAL_HEADSET:
-		return sprintf(buf, "H2W_SEC_HEADSET\n");
+		return sprintf(buf, "H2W_NORMAL_HEADSET\n");
 	}
 	return -EINVAL;
 }
@@ -267,7 +267,7 @@ static ssize_t h2w_set_state(struct switch_dev *sdev, char *buf)
 		switch_set_state(&hi->sdev, H2W_SEC_HEADSET);
 		return 0;
 	case H2W_NORMAL_HEADSET:
-		switch_set_state(&hi->sdev, H2W_SEC_HEADSET);
+		switch_set_state(&hi->sdev, H2W_NORMAL_HEADSET);
 		return 0;
 	default:
 		break;
@@ -334,8 +334,8 @@ static void remove_headset(void)
 	unsigned long irq_flags;
 
 	mutex_lock(&hi->mutex_lock);
-        int tmp = switch_get_state(&hi->sdev) & ~(BIT_HEADSET | BIT_HEADSET_NO_MIC);
-	switch_set_state(&hi->sdev, tmp == 2 ? 1 : tmp);
+	switch_set_state(&hi->sdev, switch_get_state(&hi->sdev) &
+			~(BIT_HEADSET | BIT_HEADSET_NO_MIC));
 	mutex_unlock(&hi->mutex_lock);
 	// for headset detection sound
 	wake_lock_timeout(&headset_delayed_work_wake_lock, 5*HZ);
@@ -745,7 +745,6 @@ static void insert_headset(void)
 	if (!hi->btn_11pin_35mm_flag) { 
 		printk("[H2W] 2) switch_set_state : %d\n", state);
 		mutex_lock(&hi->mutex_lock);
-		state = state == 2 ? 1 : state;
 		switch_set_state(&hi->sdev, state);
 		mutex_unlock(&hi->mutex_lock);
 	}
@@ -754,7 +753,6 @@ static void insert_headset(void)
 		state = BIT_HEADSET;
 		printk("[H2W] 1) switch_set_state : %d\n", state);
 		mutex_lock(&hi->mutex_lock);
-		state = state == 2 ? 1 : state;
 		switch_set_state(&hi->sdev, state);
 		mutex_unlock(&hi->mutex_lock);		
 	}
@@ -1117,8 +1115,7 @@ static irqreturn_t button_irq_handler(int irq, void *dev_id)
 static int h2w_debug_set(void *data, u64 val)
 {
 	mutex_lock(&hi->mutex_lock);
-	int tmp = (int)val == 2 ? 1 : (int)val;
-	switch_set_state(&hi->sdev, tmp);
+	switch_set_state(&hi->sdev, (int)val);
 	mutex_unlock(&hi->mutex_lock);
 	return 0;
 }
