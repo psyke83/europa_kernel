@@ -246,6 +246,10 @@ struct msm_audio_pcm_config {
 #define SND_SET_MAIN_MIC 	_IOW(SND_IOCTL_MAGIC, 9, int *)
 #define SND_SET_SUB_MIC 	_IOW(SND_IOCTL_MAGIC, 10, int *)
 #define SND_MAX8899_AMP_OFF _IOW(SND_IOCTL_MAGIC, 11, int *)
+struct msm_snd_set_fm_radio_vol_param {
+	int32_t volume;
+};
+#define SND_SET_FM_RADIO_VOLUME _IOWR(SND_IOCTL_MAGIC, 17, int *)
 
 #define AUDIO_EVENT_SUSPEND 0
 #define AUDIO_EVENT_RESUME 1
