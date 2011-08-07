@@ -584,7 +584,7 @@ typedef struct {
 #define bma023_BW_1500HZ	6	/**< sets bandwidth to 1500HZ \see bma023_set_bandwidth() */
 
 /* operation mode, add for AKMD2, joon.c.baek */
-#define ACEEL       0
+#define ACCEL       0
 #define COMPASS     1
 
 #define STANDBY     0

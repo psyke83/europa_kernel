@@ -121,9 +121,6 @@ static struct ktermios *dpram_termios_locked[MAX_INDEX];
 
 extern void *smem_alloc(unsigned, unsigned);
 
-// hsil for cpufreq
-extern int cpufreq_direct_set_policy(unsigned int cpu, const char *buf);
-
 //Get charging status & charger Connect value!!!
 extern void get_charger_type(void);
 extern void msm_batt_check_event(void);
@@ -427,15 +424,6 @@ EXPORT_SYMBOL(multipdp_write);
 
 struct class *sec_class;
 struct device *dpram_dev;
-// hsil
-#define POWER_DOWN_TIME ( 20 * HZ )
-struct device *pm_dev;
-void power_down_registertimer(struct timer_list* ptimer, unsigned long timeover );
-void power_down_timeout(unsigned long arg);
-struct timer_list power_down_timer;
-
-// hsil for cpufreq
-struct device *cpu_gov_dev;
 
 static ssize_t show_info(struct device *d,
 		struct device_attribute *attr, char *buf)
@@ -545,51 +533,7 @@ static ssize_t store_whitelist(struct device *d,
 static DEVICE_ATTR(whitelist, S_IRUGO|S_IWUSR, NULL, store_whitelist);
 #endif
 
-// hsil 
 
-static ssize_t store_power_down(struct device *d,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	int i;
-	char *after;
-        unsigned long value = simple_strtoul(buf, &after, 10);
-
-	if (value == 1)
-	{
-		printk("[HSIL] %s(%d)\n", __func__, __LINE__);
-        	power_down_registertimer(&power_down_timer, POWER_DOWN_TIME);	
-	}	
-
-	return count;
-}
-
-static DEVICE_ATTR(power_down, S_IRUGO|S_IWUSR, NULL, store_power_down);
-
-// hsil for cpufreq
-static ssize_t store_cpu_gov(struct device *d,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	int i;
-	char *after;
-        unsigned long value = simple_strtoul(buf, &after, 10);
-
-	if (value == 1)
-	{
-		printk("[HSIL] %s(%d)\n", __func__, __LINE__);
-		cpufreq_direct_set_policy(0, "performance");
-	}	
-	else if (value == 0)
-	{
-		printk("[HSIL] %s(%d)\n", __func__, __LINE__);
-		cpufreq_direct_set_policy(0, "ondemand");
-	}
-	else
-		printk("[HSIL] %s : No format\n", __func__);
-
-	return count;
-}
-
-static DEVICE_ATTR(cpu_gov, S_IRUGO|S_IWUSR, NULL, store_cpu_gov);
 
 
 static int dpram_write(dpram_device_t *device,
@@ -2008,24 +1952,6 @@ int dump_enable_flag = 0;
 
 EXPORT_SYMBOL(dump_enable_flag);
 
-// hsil
-void power_down_registertimer(struct timer_list* ptimer, unsigned long timeover )
-{
-        printk("%s\n",__func__);
-        init_timer(ptimer);
-        ptimer->expires = get_jiffies_64() + timeover;
-        ptimer->data = (long) NULL;
-        ptimer->function = power_down_timeout;
-        add_timer(ptimer);
-}
- 
-void power_down_timeout(unsigned long arg)
-{
-        printk("%s\n",__func__);
-        smem_flag->info = 0xAEAEAEAE;
-        msm_proc_comm_reset_modem_now();
-}
-
 static int silent_read_proc_debug(char *page, char **start, off_t offset,
 		                    int count, int *eof, void *data)
 {
@@ -2095,10 +2021,10 @@ static int dump_write_proc_debug(struct file *file, const char *buffer,
 		smem_flag->info = 0xAEAEAEAE;
 	} else if (buf[0] == '1') {		// middle (kernel fault)
 		dump_enable_flag = 1;
-		smem_flag->info = 0xA9A9A9A9;
+		smem_flag->info = 0x0;
 	} else if (buf[0] == '2') {		// high (user fault)
 		dump_enable_flag = 2;
-		smem_flag->info = 0xA9A9A9A9;
+		smem_flag->info = 0x0;
 	} else {
 		kfree(buf);
 		return -EINVAL;
@@ -2143,7 +2069,7 @@ static int __init dpram_init(void)
 	sec_class = class_create(THIS_MODULE, "sec");
 	if(IS_ERR(sec_class))
 		pr_err("Failed to create class(sec)!\n");
-	dpram_dev = device_create(sec_class, NULL, 0, NULL, "dpram");
+    dpram_dev = device_create(sec_class, NULL, 0, NULL, "dpram");
 	if(IS_ERR(dpram_dev))
 		pr_err("Failed to create device(dpram)!\n");
 	if(device_create_file(dpram_dev, &dev_attr_info) < 0)
@@ -2152,24 +2078,6 @@ static int __init dpram_init(void)
 	if(device_create_file(dpram_dev, &dev_attr_whitelist) < 0)
 		pr_err("Failed to create device file(%s)!\n", dev_attr_whitelist.attr.name);
 #endif
-	// hsil
-	pm_dev = device_create(sec_class, NULL, 0, NULL, "pm");
-	if(IS_ERR(pm_dev))
-		pr_err("Failed to create device(pm)!\n");
-	if(device_create_file(pm_dev, &dev_attr_info) < 0)
-		pr_err("Failed to create device file(%s)!\n", dev_attr_info.attr.name);
-	if(device_create_file(pm_dev, &dev_attr_power_down) < 0)
-		pr_err("Failed to create device file(%s)!\n", dev_attr_power_down.attr.name);
-
-	// hsil for cpufreq
-	cpu_gov_dev = device_create(sec_class, NULL, 0, NULL, "cpu");
-	if(IS_ERR(cpu_gov_dev))
-		pr_err("Failed to create device(cpu)!\n");
-	if(device_create_file(cpu_gov_dev, &dev_attr_info) < 0)
-		pr_err("Failed to create device file(%s)!\n", dev_attr_info.attr.name);
-	if(device_create_file(cpu_gov_dev, &dev_attr_cpu_gov) < 0)
-		pr_err("Failed to create device file(%s)!\n", dev_attr_cpu_gov.attr.name);
-
 error_return:
 
 	return ret;
