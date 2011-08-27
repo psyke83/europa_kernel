@@ -41,10 +41,9 @@
 #include <linux/i2c/bma023_dev.h>
 
 //#define DEBUG 1	
-//#define BMA_DEBUG
+#define BMA_DEBUG
 
 #define ACC_DEV_MAJOR 241
-#define BMA023_RETRY_COUNT	3
 
 
 /* i2c operation for bma API */
@@ -52,10 +51,8 @@ static char bma220_i2c_write(unsigned char sla, unsigned char reg_addr, unsigned
 static char bma220_i2c_read(unsigned char sla, unsigned char reg_addr, unsigned char *data, unsigned char len);
 static void bma220_i2c_delay(unsigned int msec);
 
-//static char bma023_i2c_write(unsigned char sla, unsigned char reg_addr, unsigned char *data, unsigned char len);
-//static char bma023_i2c_read(unsigned char sla, unsigned char reg_addr, unsigned char *data, unsigned char len);
-//static char i2c_acc_bma023_read(u8 reg, u8 *val, unsigned int len );
-//static char i2c_acc_bma023_write( u8 reg, u8 *val );
+static char i2c_acc_bma023_read(u8 reg, u8 *val, unsigned int len );
+static char i2c_acc_bma023_write( u8 reg, u8 *val );
 
 enum BMA_SENSORS  
 {
@@ -82,11 +79,6 @@ EXPORT_SYMBOL(bma_dev_t);
 /*************************************************************************/
 /*	i2c delay routine for eeprom	*/
 static inline void bma220_i2c_delay(unsigned int msec)
-{
-	mdelay(msec);
-}
-
-static inline void bma023_i2c_delay(unsigned int msec)
 {
 	mdelay(msec);
 }
@@ -141,7 +133,7 @@ static inline char bma220_i2c_read(unsigned char sla, unsigned char reg_addr, un
 /*************************************************************************/
 #define I2C_M_WR				0x00
 
-static inline char i2c_acc_bma023_read(unsigned char reg_addr, unsigned char *data, unsigned char len) 
+static char i2c_acc_bma023_read(u8 reg, u8 *val, unsigned int len )
 {
 #if 0
 	int 	 err;
@@ -184,39 +176,23 @@ static inline char i2c_acc_bma023_read(unsigned char reg_addr, unsigned char *da
 	trace_out(); 
 	return err;
 #else
-	uint8_t i;
-
-	struct i2c_msg msgs[] = {
-		{
-			.addr	= bma_client->addr,
-			.flags	= 0,
-			.len	= 1,
-			.buf	= &reg_addr,
-		},
-		{
-			.addr	= bma_client->addr,
-			.flags	= I2C_M_RD,
-			.len	= len,
-			.buf	= data,
-		}
-	};
-	
-	for (i = 0; i < BMA023_RETRY_COUNT; i++) {
-		if (i2c_transfer(bma_client->adapter, msgs, 2) > 0) {
-			break;
-		}
-		mdelay(10);
+	int dummy=0;
+	int i=0;
+	if( bma_client == NULL )	/*	No global client pointer?	*/
+		return -1;
+	while(i<len)
+	{		
+		dummy = i2c_smbus_read_word_data(bma_client, reg);
+		val[i] = dummy & 0x00ff;
+		i++;
+		reg++;
+		dummy = len;
 	}
-
-	if (i >= BMA023_RETRY_COUNT) {
-		pr_err("%s: retry over %d\n", __FUNCTION__, BMA023_RETRY_COUNT);
-		return -EIO;
-	}
-	return 0;	
+	return 0;
 #endif
 }
 
-static inline char i2c_acc_bma023_write(unsigned char reg_addr, unsigned char *data, unsigned char len)
+static char i2c_acc_bma023_write( u8 reg, u8 *val )
 {
 #if 0
 	int err;
@@ -247,30 +223,21 @@ static inline char i2c_acc_bma023_write(unsigned char reg_addr, unsigned char *d
 	trace_out(); 
 	return err;
 #else
-	uint8_t i;
-	unsigned char tmp[2];
-	tmp[0] = reg_addr;
-	tmp[1] = *data;
-	
-	struct i2c_msg msg[] = {
-		{
-			.addr	= bma_client->addr,
-			.flags	= 0,
-			.len	= 2,
-			.buf	= tmp,
-		}
-	};
-	
-	for (i = 0; i < BMA023_RETRY_COUNT; i++) {
-		if (i2c_transfer(bma_client->adapter, msg, 1) > 0) {
-			break;
-		}
-		mdelay(10);
-	}
+	int dummy;
+	int i=0;
+	unsigned char len = 1;
+	if( bma_client == NULL )	/*	No global client pointer?	*/
+		return -1;	
+	dummy = i2c_smbus_write_byte_data(bma_client, reg, val[0]);
 
-	if (i >= BMA023_RETRY_COUNT) {
-		pr_err("%s: retry over %d\n", __FUNCTION__, BMA023_RETRY_COUNT);
-		return -EIO;
+	while(i<len)
+	{
+		dummy = i2c_smbus_write_byte_data(bma_client, reg, val[0]);
+		reg++;
+		val++;
+		i++;		
+		if(dummy<0)
+			return -1;	
 	}
 
 	return 0;
@@ -1096,7 +1063,6 @@ static int bma_ioctl(struct inode *inode, struct file *file, unsigned int cmd, u
 		{
 #ifdef BMA_DEBUG
 			printk("copy_to_user error\n");
-
 #endif
 			return -EFAULT;
 		}
@@ -1491,7 +1457,6 @@ static int bma_detect(struct i2c_client *client, int kind,
 
 static int bma_probe(struct i2c_client *client,
 			 const struct i2c_device_id *id)
-
 {
 	int err = 0;
 	int tempvalue;
@@ -1581,7 +1546,6 @@ static int bma_probe(struct i2c_client *client,
 	{
 		data->bma023.bma023_bus_write = i2c_acc_bma023_write;
 		data->bma023.bma023_bus_read  = i2c_acc_bma023_read;
-		data->bma023.delay_msec = bma023_i2c_delay;	
 
 		/*call init function to set read write functions, read registers */
 		bma023_init( &(data->bma023) );
