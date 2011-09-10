@@ -63,7 +63,6 @@ static struct snd_ctxt the_snd;
 #define SND_SET_VOLUME_PROC 3
 #define SND_AVC_CTL_PROC 29
 #define SND_AGC_CTL_PROC 30
-#define SND_SET_FM_RADIO_VOLUME_PROC 72
 #define SND_SET_EXTAMP_PROC 100 /* AMP Set Volume */
 
 struct rpc_snd_set_device_args {
@@ -132,19 +131,6 @@ struct snd_set_extamp_msg {
 
 struct snd_endpoint *get_snd_endpoints(int *size);
 
-struct rpc_snd_set_fm_radio_vol_args {
-     uint32_t volume;
-     uint32_t cb_func;
-     uint32_t client_data;
-};
- 
-struct snd_set_fm_radio_vol_msg {
-    struct rpc_request_hdr hdr;
-    struct rpc_snd_set_fm_radio_vol_args args;
-};
-
-static int fm_radio_flag = 0;
-
 static inline int check_mute(int mute)
 {
 	return (mute == SND_MUTE_MUTED ||
@@ -191,8 +177,6 @@ static long snd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	struct msm_snd_device_config dev;
 	struct msm_snd_volume_config vol;
 	struct msm_snd_extamp_config extamp;
-	struct msm_snd_set_fm_radio_vol_param fmradiovol;
-	struct snd_set_fm_radio_vol_msg fmrmsg;
 	struct snd_ctxt *snd = file->private_data;
 	int rc = 0;
 
@@ -316,7 +300,6 @@ static long snd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			break;
 		}
 
-
 		emsg.args.device = cpu_to_be32(extamp.device);
 		emsg.args.speaker_volume = cpu_to_be32(extamp.speaker_volume);
 		emsg.args.headset_volume = cpu_to_be32(extamp.headset_volume);
@@ -335,22 +318,6 @@ static long snd_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;
 	case SND_SET_SUB_MIC:
 		rc = gpio_direction_output(89, 0);
-		break;
-	case SND_SET_FM_RADIO_VOLUME:
-		if (copy_from_user(&fmradiovol, (void __user *) arg, sizeof(fmradiovol))) {
-			pr_err("snd_ioctl set amp_gain: invalid pointer.\n");
-			rc = -EFAULT;
-			break;
-		}
-		fmrmsg.args.volume = cpu_to_be32(fmradiovol.volume);
-		fmrmsg.args.cb_func = -1;
-		fmrmsg.args.client_data = 0;
-
-		pr_info("snd_set_fm_radio_volume %d\n", fmradiovol.volume);
-
-		rc = msm_rpc_call(snd->ept,
-			SND_SET_FM_RADIO_VOLUME_PROC,
-			&fmrmsg, sizeof(fmrmsg), 5 * HZ);
 		break;
 #ifdef FEATURE_MAX8899_AMP_OFF
 	case SND_MAX8899_AMP_OFF:

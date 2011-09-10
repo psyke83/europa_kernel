@@ -1,4 +1,4 @@
 #!/bin/bash
 
-make europa_rev02_defconfig
+make europa_cm_rev02_defconfig
 make
