@@ -1,20 +1,24 @@
-/*------------------------------------------------------------------------------ */
-/* Copyright (c) 2009-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// Copyright (c) 2009-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 
 /* AR3K module configuration APIs for HCI-bridge operation */
 
@@ -34,25 +38,25 @@ extern "C" {
 #define AR3K_CONFIG_FLAG_SET_AR6K_SCALE_STEP        (1 << 3)
 
 
-typedef struct {
-    A_UINT32                 Flags;           /* config flags */
+struct ar3k_config_info {
+    u32 Flags;           /* config flags */
     void                     *pHCIDev;        /* HCI bridge device     */
-    HCI_TRANSPORT_PROPERTIES *pHCIProps;      /* HCI bridge props      */
-    HIF_DEVICE               *pHIFDevice;     /* HIF layer device      */
+    struct hci_transport_properties *pHCIProps;      /* HCI bridge props      */
+    struct hif_device               *pHIFDevice;     /* HIF layer device      */
     
-    A_UINT32                 AR3KBaudRate;    /* AR3K operational baud rate */
-    A_UINT16                 AR6KScale;       /* AR6K UART scale value */    
-    A_UINT16                 AR6KStep;        /* AR6K UART step value  */
+    u32 AR3KBaudRate;    /* AR3K operational baud rate */
+    u16 AR6KScale;       /* AR6K UART scale value */
+    u16 AR6KStep;        /* AR6K UART step value  */
     struct hci_dev           *pBtStackHCIDev; /* BT Stack HCI dev */
-    A_UINT32                 PwrMgmtEnabled;  /* TLPM enabled? */  
-    A_UINT16                 IdleTimeout;     /* TLPM idle timeout */
-    A_UINT16                 WakeupTimeout;   /* TLPM wakeup timeout */
-    A_UINT8                  bdaddr[6];       /* Bluetooth device address */
-} AR3K_CONFIG_INFO;
+    u32 PwrMgmtEnabled;  /* TLPM enabled? */
+    u16 IdleTimeout;     /* TLPM idle timeout */
+    u16 WakeupTimeout;   /* TLPM wakeup timeout */
+    u8 bdaddr[6];       /* Bluetooth device address */
+};
                                                                                         
-A_STATUS AR3KConfigure(AR3K_CONFIG_INFO *pConfigInfo);
+int AR3KConfigure(struct ar3k_config_info *pConfigInfo);
 
-A_STATUS AR3KConfigureExit(void *config);
+int AR3KConfigureExit(void *config);
 
 #ifdef __cplusplus
 }

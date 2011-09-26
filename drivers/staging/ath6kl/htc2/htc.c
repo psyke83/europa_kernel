@@ -1,25 +1,29 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="htc.c" company="Atheros"> */
-/*    Copyright (c) 2007-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="htc.c" company="Atheros">
+//    Copyright (c) 2007-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 #include "htc_internal.h"
 
 #ifdef ATH_DEBUG_MODULE
-static ATH_DEBUG_MASK_DESCRIPTION g_HTCDebugDescription[] = {
+static struct ath_debug_mask_description g_HTCDebugDescription[] = {
     { ATH_DEBUG_SEND , "Send"},
     { ATH_DEBUG_RECV , "Recv"},
     { ATH_DEBUG_SYNC , "Sync"},
@@ -37,18 +41,18 @@ ATH_DEBUG_INSTANTIATE_MODULE_VAR(htc,
 #endif
 
 static void HTCReportFailure(void *Context);
-static void ResetEndpointStates(HTC_TARGET *target);
+static void ResetEndpointStates(struct htc_target *target);
 
-void HTCFreeControlBuffer(HTC_TARGET *target, HTC_PACKET *pPacket, HTC_PACKET_QUEUE *pList)
+void HTCFreeControlBuffer(struct htc_target *target, struct htc_packet *pPacket, struct htc_packet_queue *pList)
 {
     LOCK_HTC(target);
     HTC_PACKET_ENQUEUE(pList,pPacket);
     UNLOCK_HTC(target);
 }
 
-HTC_PACKET *HTCAllocControlBuffer(HTC_TARGET *target,  HTC_PACKET_QUEUE *pList)
+struct htc_packet *HTCAllocControlBuffer(struct htc_target *target,  struct htc_packet_queue *pList)
 {
-    HTC_PACKET *pPacket;
+    struct htc_packet *pPacket;
 
     LOCK_HTC(target);
     pPacket = HTC_PACKET_DEQUEUE(pList);
@@ -58,9 +62,9 @@ HTC_PACKET *HTCAllocControlBuffer(HTC_TARGET *target,  HTC_PACKET_QUEUE *pList)
 }
 
 /* cleanup the HTC instance */
-static void HTCCleanup(HTC_TARGET *target)
+static void HTCCleanup(struct htc_target *target)
 {
-    A_INT32 i;
+    s32 i;
 
     DevCleanup(&target->Device);
     
@@ -86,13 +90,13 @@ static void HTCCleanup(HTC_TARGET *target)
 }
 
 /* registered target arrival callback from the HIF layer */
-HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
+HTC_HANDLE HTCCreate(void *hif_handle, struct htc_init_info *pInfo)
 {
-    HTC_TARGET              *target = NULL;
-    A_STATUS                 status = A_OK;
+    struct htc_target              *target = NULL;
+    int                 status = 0;
     int                      i;
-    A_UINT32                 ctrl_bufsz;
-    A_UINT32                 blocksizes[HTC_MAILBOX_NUM_MAX];
+    u32 ctrl_bufsz;
+    u32 blocksizes[HTC_MAILBOX_NUM_MAX];
 
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("HTCCreate - Enter\n"));
 
@@ -101,13 +105,13 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
     do {
 
             /* allocate target memory */
-        if ((target = (HTC_TARGET *)A_MALLOC(sizeof(HTC_TARGET))) == NULL) {
+        if ((target = (struct htc_target *)A_MALLOC(sizeof(struct htc_target))) == NULL) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("Unable to allocate memory\n"));
             status = A_ERROR;
             break;
         }
 
-        A_MEMZERO(target, sizeof(HTC_TARGET));
+        A_MEMZERO(target, sizeof(struct htc_target));
         A_MUTEX_INIT(&target->HTCLock);
         A_MUTEX_INIT(&target->HTCRxLock);
         A_MUTEX_INIT(&target->HTCTxLock);
@@ -126,14 +130,14 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
         target->Device.MessagePendingCallback = HTCRecvMessagePendingHandler;
         target->EpWaitingForBuffers = ENDPOINT_MAX;
 
-        A_MEMCPY(&target->HTCInitInfo,pInfo,sizeof(HTC_INIT_INFO));
+        memcpy(&target->HTCInitInfo,pInfo,sizeof(struct htc_init_info));
         
         ResetEndpointStates(target);
           
             /* setup device layer */
         status = DevSetup(&target->Device);
 
-        if (A_FAILED(status)) {
+        if (status) {
             break;
         }
 
@@ -141,7 +145,7 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
         /* get the block sizes */
         status = HIFConfigureDevice(hif_handle, HIF_DEVICE_GET_MBOX_BLOCK_SIZE,
                                     blocksizes, sizeof(blocksizes));
-        if (A_FAILED(status)) {
+        if (status) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR,("Failed to get block size info from HIF layer...\n"));
             break;
         }
@@ -161,13 +165,13 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
             }
         }
 
-        if (A_FAILED(status)) {
+        if (status) {
             break;
         }
 
             /* carve up buffers/packets for control messages */
         for (i = 0; i < NUM_CONTROL_RX_BUFFERS; i++) {
-            HTC_PACKET *pControlPacket;
+            struct htc_packet *pControlPacket;
             pControlPacket = &target->HTCControlBuffers[i].HtcPacket;
             SET_HTC_PACKET_INFO_RX_REFILL(pControlPacket,
                                           target,
@@ -178,7 +182,7 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
         }
 
         for (;i < NUM_CONTROL_BUFFERS;i++) {
-             HTC_PACKET *pControlPacket;
+             struct htc_packet *pControlPacket;
              pControlPacket = &target->HTCControlBuffers[i].HtcPacket;
              INIT_HTC_PACKET_INFO(pControlPacket,
                                   target->HTCControlBuffers[i].Buffer,
@@ -186,9 +190,9 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
              HTC_FREE_CONTROL_TX(target,pControlPacket);
         }
 
-    } while (FALSE);
+    } while (false);
 
-    if (A_FAILED(status)) {
+    if (status) {
         if (target != NULL) {
             HTCCleanup(target);
             target = NULL;
@@ -202,7 +206,7 @@ HTC_HANDLE HTCCreate(void *hif_handle, HTC_INIT_INFO *pInfo)
 
 void  HTCDestroy(HTC_HANDLE HTCHandle)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("+HTCDestroy ..  Destroying :0x%lX \n",(unsigned long)target));
     HTCCleanup(target);
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("-HTCDestroy \n"));
@@ -212,21 +216,21 @@ void  HTCDestroy(HTC_HANDLE HTCHandle)
  * HIF requests */
 void *HTCGetHifDevice(HTC_HANDLE HTCHandle)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
     return target->Device.HIFDevice;
 }
 
 /* wait for the target to arrive (sends HTC Ready message)
  * this operation is fully synchronous and the message is polled for */
-A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
+int HTCWaitTarget(HTC_HANDLE HTCHandle)
 {
-    HTC_TARGET              *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
-    A_STATUS                 status;
-    HTC_PACKET              *pPacket = NULL;
+    struct htc_target              *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    int                 status;
+    struct htc_packet              *pPacket = NULL;
     HTC_READY_EX_MSG        *pRdyMsg;
 
-    HTC_SERVICE_CONNECT_REQ  connect;
-    HTC_SERVICE_CONNECT_RESP resp;
+    struct htc_service_connect_req  connect;
+    struct htc_service_connect_resp resp;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("HTCWaitTarget - Enter (target:0x%lX) \n", (unsigned long)target));
 
@@ -236,7 +240,7 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
 
         status = DoMboxHWTest(&target->Device);
 
-        if (status != A_OK) {
+        if (status) {
             break;
         }
 
@@ -245,7 +249,7 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
             /* we should be getting 1 control message that the target is ready */
         status = HTCWaitforControlMessage(target, &pPacket);
 
-        if (A_FAILED(status)) {
+        if (status) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR, (" Target Not Available!!\n"));
             break;
         }
@@ -256,7 +260,7 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
         if ((pRdyMsg->Version2_0_Info.MessageID != HTC_MSG_READY_ID) ||
             (pPacket->ActualLength < sizeof(HTC_READY_MSG))) {
                 /* this message is not valid */
-            AR_DEBUG_ASSERT(FALSE);
+            AR_DEBUG_ASSERT(false);
             status = A_EPROTO;
             break;
         }
@@ -264,7 +268,7 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
         
         if (pRdyMsg->Version2_0_Info.CreditCount == 0 || pRdyMsg->Version2_0_Info.CreditSize == 0) {
               /* this message is not valid */
-            AR_DEBUG_ASSERT(FALSE);
+            AR_DEBUG_ASSERT(false);
             status = A_EPROTO;
             break;
         }
@@ -301,7 +305,7 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
                 /* limit what HTC can handle */
             target->MaxMsgPerBundle = min(HTC_HOST_MAX_MSG_PER_BUNDLE, target->MaxMsgPerBundle);          
                 /* target supports message bundling, setup device layer */
-            if (A_FAILED(DevSetupMsgBundling(&target->Device,target->MaxMsgPerBundle))) {
+            if (DevSetupMsgBundling(&target->Device,target->MaxMsgPerBundle)) {
                     /* device layer can't handle bundling */
                 target->MaxMsgPerBundle = 0;        
             } else {
@@ -316,10 +320,10 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
                     (" HTC bundling allowed. Max Msg Per HTC Bundle: %d\n", target->MaxMsgPerBundle));    
            
             if (DEV_GET_MAX_BUNDLE_SEND_LENGTH(&target->Device) != 0) {           
-                target->SendBundlingEnabled = TRUE;
+                target->SendBundlingEnabled = true;
             }            
             if (DEV_GET_MAX_BUNDLE_RECV_LENGTH(&target->Device) != 0) {    
-                target->RecvBundlingEnabled = TRUE;    
+                target->RecvBundlingEnabled = true;
             }
                             
             if (!DEV_IS_LEN_BLOCK_ALIGNED(&target->Device,target->TargetCreditSize)) {
@@ -327,7 +331,7 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
                         target->TargetCreditSize));    
                     /* disallow send bundling since the credit size is not aligned to a block size
                      * the I/O block padding will spill into the next credit buffer which is fatal */
-                target->SendBundlingEnabled = FALSE;
+                target->SendBundlingEnabled = false;
             }
         }
            
@@ -347,11 +351,11 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
                                    &connect,
                                    &resp);
 
-        if (!A_FAILED(status)) {
+        if (!status) {
             break;
         }
 
-    } while (FALSE);
+    } while (false);
 
     if (pPacket != NULL) {
         HTC_FREE_CONTROL_RX(target,pPacket);
@@ -365,11 +369,11 @@ A_STATUS HTCWaitTarget(HTC_HANDLE HTCHandle)
 
 
 /* Start HTC, enable interrupts and let the target know host has finished setup */
-A_STATUS HTCStart(HTC_HANDLE HTCHandle)
+int HTCStart(HTC_HANDLE HTCHandle)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
-    HTC_PACKET *pPacket;
-    A_STATUS   status;
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    struct htc_packet *pPacket;
+    int   status;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("HTCStart Enter\n"));
 
@@ -415,26 +419,26 @@ A_STATUS HTCStart(HTC_HANDLE HTCHandle)
             * target that the setup phase is complete */
         status = HTCSendSetupComplete(target);
 
-        if (A_FAILED(status)) {
+        if (status) {
             break;
         }
 
             /* unmask interrupts */
         status = DevUnmaskInterrupts(&target->Device);
 
-        if (A_FAILED(status)) {
+        if (status) {
             HTCStop(target);
         }
 
-    } while (FALSE);
+    } while (false);
 
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("HTCStart Exit\n"));
     return status;
 }
 
-static void ResetEndpointStates(HTC_TARGET *target)
+static void ResetEndpointStates(struct htc_target *target)
 {
-    HTC_ENDPOINT        *pEndpoint;
+    struct htc_endpoint        *pEndpoint;
     int                  i;
 
     for (i = ENDPOINT_0; i < ENDPOINT_MAX; i++) {
@@ -459,7 +463,7 @@ static void ResetEndpointStates(HTC_TARGET *target)
 /* stop HTC communications, i.e. stop interrupt reception, and flush all queued buffers */
 void HTCStop(HTC_HANDLE HTCHandle)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("+HTCStop \n"));
 
     LOCK_HTC(target);
@@ -471,6 +475,12 @@ void HTCStop(HTC_HANDLE HTCHandle)
          * all pending HIF I/O has completed, we can safely flush the queues */
     DevMaskInterrupts(&target->Device);
 
+#ifdef THREAD_X
+	//
+	//	Is this delay required
+	//
+    A_MDELAY(200); // wait for IRQ process done
+#endif
         /* flush all send packets */
     HTCFlushSendPkts(target);
         /* flush all recv buffers */
@@ -486,7 +496,7 @@ void HTCStop(HTC_HANDLE HTCHandle)
 #ifdef ATH_DEBUG_MODULE
 void HTCDumpCreditStates(HTC_HANDLE HTCHandle)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
 
     LOCK_HTC_TX(target);
 
@@ -501,9 +511,9 @@ void HTCDumpCreditStates(HTC_HANDLE HTCHandle)
  * which uses a mechanism to report errors from the target (i.e. special interrupts) */
 static void HTCReportFailure(void *Context)
 {
-    HTC_TARGET *target = (HTC_TARGET *)Context;
+    struct htc_target *target = (struct htc_target *)Context;
 
-    target->TargetFailure = TRUE;
+    target->TargetFailure = true;
 
     if (target->HTCInitInfo.TargetFailure != NULL) {
             /* let upper layer know, it needs to call HTCStop() */
@@ -511,36 +521,34 @@ static void HTCReportFailure(void *Context)
     }
 }
 
-A_BOOL HTCGetEndpointStatistics(HTC_HANDLE               HTCHandle,
+bool HTCGetEndpointStatistics(HTC_HANDLE               HTCHandle,
                                 HTC_ENDPOINT_ID          Endpoint,
                                 HTC_ENDPOINT_STAT_ACTION Action,
-                                HTC_ENDPOINT_STATS       *pStats)
+                                struct htc_endpoint_stats       *pStats)
 {
 
 #ifdef HTC_EP_STAT_PROFILING
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
-    A_BOOL     clearStats = FALSE;
-    A_BOOL     sample = FALSE;
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    bool     clearStats = false;
+    bool     sample = false;
 
     switch (Action) {
         case HTC_EP_STAT_SAMPLE :
-            sample = TRUE;
+            sample = true;
             break;
         case HTC_EP_STAT_SAMPLE_AND_CLEAR :
-            sample = TRUE;
-            clearStats = TRUE;
+            sample = true;
+            clearStats = true;
             break;
         case HTC_EP_STAT_CLEAR :
-            clearStats = TRUE;
+            clearStats = true;
             break;
         default:
             break;
     }
 
     A_ASSERT(Endpoint < ENDPOINT_MAX);
-    if (!(Endpoint < ENDPOINT_MAX)) {
-        return FALSE;  /* in case panic_on_assert==0 */
-    }
+
         /* lock out TX and RX while we sample and/or clear */
     LOCK_HTC_TX(target);
     LOCK_HTC_RX(target);
@@ -548,26 +556,26 @@ A_BOOL HTCGetEndpointStatistics(HTC_HANDLE               HTCHandle,
     if (sample) {
         A_ASSERT(pStats != NULL);
             /* return the stats to the caller */
-        A_MEMCPY(pStats, &target->EndPoint[Endpoint].EndPointStats, sizeof(HTC_ENDPOINT_STATS));
+        memcpy(pStats, &target->EndPoint[Endpoint].EndPointStats, sizeof(struct htc_endpoint_stats));
     }
 
     if (clearStats) {
             /* reset stats */
-        A_MEMZERO(&target->EndPoint[Endpoint].EndPointStats, sizeof(HTC_ENDPOINT_STATS));
+        A_MEMZERO(&target->EndPoint[Endpoint].EndPointStats, sizeof(struct htc_endpoint_stats));
     }
 
     UNLOCK_HTC_RX(target);
     UNLOCK_HTC_TX(target);
 
-    return TRUE;
+    return true;
 #else
-    return FALSE;
+    return false;
 #endif
 }
 
-AR6K_DEVICE  *HTCGetAR6KDevice(void *HTCHandle)
+struct ar6k_device  *HTCGetAR6KDevice(void *HTCHandle)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
     return &target->Device;
 }
 

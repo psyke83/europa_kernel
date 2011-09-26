@@ -1,23 +1,27 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="target_reg_table.h" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Target register table macros and structure definitions */
-/* */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="target_reg_table.h" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Target register table macros and structure definitions
+//
+// Author(s): ="Atheros"
+//==============================================================================
 
 #ifndef TARGET_REG_TABLE_H_
 #define TARGET_REG_TABLE_H_
@@ -26,48 +30,48 @@
 
 /*** WARNING : Add to the end of the TABLE! do not change the order ****/
 typedef struct targetdef_s {
-    A_UINT32 d_RTC_BASE_ADDRESS;
-    A_UINT32 d_SYSTEM_SLEEP_OFFSET;
-    A_UINT32 d_SYSTEM_SLEEP_DISABLE_LSB;
-    A_UINT32 d_SYSTEM_SLEEP_DISABLE_MASK;
-    A_UINT32 d_CLOCK_CONTROL_OFFSET;
-    A_UINT32 d_CLOCK_CONTROL_SI0_CLK_MASK;
-    A_UINT32 d_RESET_CONTROL_OFFSET;
-    A_UINT32 d_RESET_CONTROL_SI0_RST_MASK;
-    A_UINT32 d_GPIO_BASE_ADDRESS;
-    A_UINT32 d_GPIO_PIN0_OFFSET;
-    A_UINT32 d_GPIO_PIN1_OFFSET;
-    A_UINT32 d_GPIO_PIN0_CONFIG_MASK;
-    A_UINT32 d_GPIO_PIN1_CONFIG_MASK;
-    A_UINT32 d_SI_CONFIG_BIDIR_OD_DATA_LSB;
-    A_UINT32 d_SI_CONFIG_BIDIR_OD_DATA_MASK;
-    A_UINT32 d_SI_CONFIG_I2C_LSB;
-    A_UINT32 d_SI_CONFIG_I2C_MASK;
-    A_UINT32 d_SI_CONFIG_POS_SAMPLE_LSB;
-    A_UINT32 d_SI_CONFIG_POS_SAMPLE_MASK;
-    A_UINT32 d_SI_CONFIG_INACTIVE_CLK_LSB;
-    A_UINT32 d_SI_CONFIG_INACTIVE_CLK_MASK;
-    A_UINT32 d_SI_CONFIG_INACTIVE_DATA_LSB;
-    A_UINT32 d_SI_CONFIG_INACTIVE_DATA_MASK;
-    A_UINT32 d_SI_CONFIG_DIVIDER_LSB;
-    A_UINT32 d_SI_CONFIG_DIVIDER_MASK;
-    A_UINT32 d_SI_BASE_ADDRESS;
-    A_UINT32 d_SI_CONFIG_OFFSET;
-    A_UINT32 d_SI_TX_DATA0_OFFSET;
-    A_UINT32 d_SI_TX_DATA1_OFFSET;
-    A_UINT32 d_SI_RX_DATA0_OFFSET;
-    A_UINT32 d_SI_RX_DATA1_OFFSET;
-    A_UINT32 d_SI_CS_OFFSET;
-    A_UINT32 d_SI_CS_DONE_ERR_MASK;
-    A_UINT32 d_SI_CS_DONE_INT_MASK;
-    A_UINT32 d_SI_CS_START_LSB;
-    A_UINT32 d_SI_CS_START_MASK;
-    A_UINT32 d_SI_CS_RX_CNT_LSB;
-    A_UINT32 d_SI_CS_RX_CNT_MASK;
-    A_UINT32 d_SI_CS_TX_CNT_LSB;
-    A_UINT32 d_SI_CS_TX_CNT_MASK;
-    A_UINT32 d_BOARD_DATA_SZ;
-    A_UINT32 d_BOARD_EXT_DATA_SZ;
+    u32 d_RTC_BASE_ADDRESS;
+    u32 d_SYSTEM_SLEEP_OFFSET;
+    u32 d_SYSTEM_SLEEP_DISABLE_LSB;
+    u32 d_SYSTEM_SLEEP_DISABLE_MASK;
+    u32 d_CLOCK_CONTROL_OFFSET;
+    u32 d_CLOCK_CONTROL_SI0_CLK_MASK;
+    u32 d_RESET_CONTROL_OFFSET;
+    u32 d_RESET_CONTROL_SI0_RST_MASK;
+    u32 d_GPIO_BASE_ADDRESS;
+    u32 d_GPIO_PIN0_OFFSET;
+    u32 d_GPIO_PIN1_OFFSET;
+    u32 d_GPIO_PIN0_CONFIG_MASK;
+    u32 d_GPIO_PIN1_CONFIG_MASK;
+    u32 d_SI_CONFIG_BIDIR_OD_DATA_LSB;
+    u32 d_SI_CONFIG_BIDIR_OD_DATA_MASK;
+    u32 d_SI_CONFIG_I2C_LSB;
+    u32 d_SI_CONFIG_I2C_MASK;
+    u32 d_SI_CONFIG_POS_SAMPLE_LSB;
+    u32 d_SI_CONFIG_POS_SAMPLE_MASK;
+    u32 d_SI_CONFIG_INACTIVE_CLK_LSB;
+    u32 d_SI_CONFIG_INACTIVE_CLK_MASK;
+    u32 d_SI_CONFIG_INACTIVE_DATA_LSB;
+    u32 d_SI_CONFIG_INACTIVE_DATA_MASK;
+    u32 d_SI_CONFIG_DIVIDER_LSB;
+    u32 d_SI_CONFIG_DIVIDER_MASK;
+    u32 d_SI_BASE_ADDRESS;
+    u32 d_SI_CONFIG_OFFSET;
+    u32 d_SI_TX_DATA0_OFFSET;
+    u32 d_SI_TX_DATA1_OFFSET;
+    u32 d_SI_RX_DATA0_OFFSET;
+    u32 d_SI_RX_DATA1_OFFSET;
+    u32 d_SI_CS_OFFSET;
+    u32 d_SI_CS_DONE_ERR_MASK;
+    u32 d_SI_CS_DONE_INT_MASK;
+    u32 d_SI_CS_START_LSB;
+    u32 d_SI_CS_START_MASK;
+    u32 d_SI_CS_RX_CNT_LSB;
+    u32 d_SI_CS_RX_CNT_MASK;
+    u32 d_SI_CS_TX_CNT_LSB;
+    u32 d_SI_CS_TX_CNT_MASK;
+    u32 d_BOARD_DATA_SZ;
+    u32 d_BOARD_EXT_DATA_SZ;
 } TARGET_REGISTER_TABLE;
 
 #define BOARD_DATA_SZ_MAX 2048

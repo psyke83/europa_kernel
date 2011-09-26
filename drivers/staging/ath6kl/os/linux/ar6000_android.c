@@ -1,40 +1,39 @@
-/*------------------------------------------------------------------------------ */
-/* Copyright (c) 2004-2010 Atheros Communications Inc. */
-/* All rights reserved. */
-/* */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/* */
-/* Author(s): ="Atheros" */
-/*------------------------------------------------------------------------------ */
+//------------------------------------------------------------------------------
+// Copyright (c) 2004-2010 Atheros Communications Inc.
+// All rights reserved.
+//
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//
+// Author(s): ="Atheros"
+//------------------------------------------------------------------------------
 #include "ar6000_drv.h"
 #include "htc.h"
 #include <linux/vmalloc.h>
 #include <linux/fs.h>
 
-#ifdef CONFIG_HAS_WAKELOCK
-#include <linux/wakelock.h>
-#endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 #endif
 
-A_BOOL enable_mmc_host_detect_change = 0;
+bool enable_mmc_host_detect_change = false;
 static void ar6000_enable_mmchost_detect_change(int enable);
 
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 char fwpath[256] = "/system/wifi";
-#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 int wowledon;
 unsigned int enablelogcat;
 
@@ -42,28 +41,17 @@ extern int bmienable;
 extern struct net_device *ar6000_devices[];
 extern char ifname[];
 
-#ifdef CONFIG_HAS_WAKELOCK
-extern struct wake_lock ar6k_wow_wake_lock;
-struct wake_lock ar6k_init_wake_lock;
-#endif
-
 const char def_ifname[] = "wlan0";
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 module_param_string(fwpath, fwpath, sizeof(fwpath), 0644);
 module_param(enablelogcat, uint, 0644);
 module_param(wowledon, int, 0644);
-#else
-#define __user
-/* for linux 2.4 and lower */
-MODULE_PARAM(wowledon,"i");
-#endif 
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static int screen_is_off;
 static struct early_suspend ar6k_early_suspend;
 #endif
 
-static A_STATUS (*ar6000_avail_ev_p)(void *, void *);
+static int (*ar6000_avail_ev_p)(void *, void *);
 
 #if defined(CONFIG_ANDROID_LOGGER) && (!defined(CONFIG_MMC_MSM) || LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,32))
 int logger_write(const enum logidx index,
@@ -132,9 +120,7 @@ int logger_write(const enum logidx index,
     }
     set_fs(oldfs);
 out_free_message:
-    if (msg) {
-        kfree(msg);
-    }
+    kfree(msg);
     return ret;
 }
 #endif
@@ -167,7 +153,7 @@ int android_logger_lv(void *module, int mask)
     }
 }
 
-static int android_readwrite_file(const A_CHAR *filename, A_CHAR *rbuf, const A_CHAR *wbuf, size_t length)
+static int android_readwrite_file(const char *filename, char *rbuf, const char *wbuf, size_t length)
 {
     int ret = 0;
     struct file *filp = (struct file *)-ENOENT;
@@ -227,10 +213,9 @@ int android_request_firmware(const struct firmware **firmware_p, const char *nam
     struct firmware *firmware;
     char filename[256];
     const char *raw_filename = name;
-	*firmware_p = firmware = A_MALLOC(sizeof(*firmware));
+	*firmware_p = firmware = kzalloc(sizeof(*firmware), GFP_KERNEL);
     if (!firmware) 
 		return -ENOMEM;
-    A_MEMZERO(firmware, sizeof(*firmware));
 	sprintf(filename, "%s/%s", fwpath, raw_filename);
 #ifdef TARGET_EUROPA
     if (strcmp(raw_filename, "softmac")==0) {
@@ -269,7 +254,7 @@ int android_request_firmware(const struct firmware **firmware_p, const char *nam
         if (firmware) {
             if (firmware->data)
                 vfree(firmware->data);
-            A_FREE(firmware);
+            kfree(firmware);
         }
         *firmware_p = NULL;
     } else {
@@ -283,21 +268,15 @@ void android_release_firmware(const struct firmware *firmware)
 	if (firmware) {
         if (firmware->data)
             vfree(firmware->data);
-        A_FREE((struct firmware *)firmware);
+        kfree(firmware);
     }
 }
 
-static A_STATUS ar6000_android_avail_ev(void *context, void *hif_handle)
+static int ar6000_android_avail_ev(void *context, void *hif_handle)
 {
-    A_STATUS ret;    
-#ifdef CONFIG_HAS_WAKELOCK
-    wake_lock(&ar6k_init_wake_lock);
-#endif
+    int ret;
     ar6000_enable_mmchost_detect_change(0);
     ret = ar6000_avail_ev_p(context, hif_handle);
-#ifdef CONFIG_HAS_WAKELOCK
-    wake_unlock(&ar6k_init_wake_lock);
-#endif
     return ret;
 }
 
@@ -328,7 +307,7 @@ int android_ioctl_siwpriv(struct net_device *dev,
 {
     char *cmd = data->pointer;
     char *buf = data->pointer;
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(dev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(dev);
 
     if (!cmd || !buf) {
         return -EOPNOTSUPP;
@@ -370,7 +349,7 @@ int android_ioctl_siwpriv(struct net_device *dev,
         return -1;
     } else if (strcasecmp(cmd, "MACADDR")==0) {
         /* reply comes back in the form "Macaddr = XX.XX.XX.XX.XX.XX" where XX */
-        A_UCHAR *mac = dev->dev_addr;
+        u8 *mac = dev->dev_addr;
         return snprintf(buf, data->length, "Macaddr = %02X.%02X.%02X.%02X.%02X.%02X\n",
                         mac[0], mac[1], mac[2],
                         mac[3], mac[4], mac[5]);
@@ -565,13 +544,8 @@ static void android_late_resume(struct early_suspend *h)
 void android_module_init(OSDRV_CALLBACKS *osdrvCallbacks)
 {
     bmienable = 1;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     if (ifname[0] == '\0')
         strcpy(ifname, def_ifname);
-#endif 
-#ifdef CONFIG_HAS_WAKELOCK
-    wake_lock_init(&ar6k_init_wake_lock, WAKE_LOCK_SUSPEND, "ar6k_init");
-#endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
     ar6k_early_suspend.suspend = android_early_suspend;
     ar6k_early_suspend.resume  = android_late_resume;
@@ -590,28 +564,25 @@ void android_module_exit(void)
 #ifdef CONFIG_HAS_EARLYSUSPEND
     unregister_early_suspend(&ar6k_early_suspend);
 #endif
-#ifdef CONFIG_HAS_WAKELOCK
-    wake_lock_destroy(&ar6k_init_wake_lock);
-#endif
     ar6000_enable_mmchost_detect_change(1);
 }
 
 #ifdef CONFIG_PM
-void android_ar6k_check_wow_status(AR_SOFTC_T *ar, struct sk_buff *skb, A_BOOL isEvent)
+void android_ar6k_check_wow_status(struct ar6_softc *ar, struct sk_buff *skb, bool isEvent)
 {
     if (
 #ifdef CONFIG_HAS_EARLYSUSPEND
         screen_is_off && 
 #endif 
             skb && ar->arConnected) {
-        A_BOOL needWake = FALSE;
+        bool needWake = false;
         if (isEvent) {
-            if (A_NETBUF_LEN(skb) >= sizeof(A_UINT16)) {
-                A_UINT16 cmd = *(const A_UINT16 *)A_NETBUF_DATA(skb);
+            if (A_NETBUF_LEN(skb) >= sizeof(u16)) {
+                u16 cmd = *(const u16 *)A_NETBUF_DATA(skb);
                 switch (cmd) {
                 case WMI_CONNECT_EVENTID:
                 case WMI_DISCONNECT_EVENTID:
-                    needWake = TRUE;
+                    needWake = true;
                     break;
                 default:
                     /* dont wake lock the system for other event */
@@ -626,34 +597,9 @@ void android_ar6k_check_wow_status(AR_SOFTC_T *ar, struct sk_buff *skb, A_BOOL i
                 case 0x888e: /* EAPOL */
                 case 0x88c7: /* RSN_PREAUTH */
                 case 0x88b4: /* WAPI */
-                    needWake = TRUE;
-                    break;
+                     needWake = true;
+                     break;
                 case 0x0806: /* ARP is not important to hold wake lock */
-                    needWake = (ar->arNetworkType==AP_NETWORK);
-                    break;
-                default:
-                    break;
-                } 
-            } else if ( !IEEE80211_IS_BROADCAST(datap->dstMac) ) {
-                if (A_NETBUF_LEN(skb)>=14+20 ) {
-					/* check if it is mDNS packets */
-                    A_UINT8 *dstIpAddr = (A_UINT8*)(A_NETBUF_DATA(skb)+14+20-4);                    
-                    struct net_device *ndev = ar->arNetDev;
-                    needWake = ((dstIpAddr[3] & 0xf8) == 0xf8) &&
-                                (ar->arNetworkType==AP_NETWORK || 
-                                (ndev->flags & IFF_ALLMULTI || ndev->flags & IFF_MULTICAST));
-                }
-            } else if (ar->arNetworkType==AP_NETWORK) {
-                switch (A_BE2CPU16(datap->typeOrLen)) {
-                case 0x0800: /* IP */
-                    if (A_NETBUF_LEN(skb)>=14+20+4) {
-                        A_UINT16 dstPort = *(A_UINT16*)(A_NETBUF_DATA(skb)+14+20+2);
-                        dstPort = A_BE2CPU16(dstPort);
-                        needWake = (dstPort == 0x43); /* dhcp request */
-                    }
-                    break;
-                case 0x0806: 
-                    needWake = TRUE;
                 default:
                     break;
                 }
@@ -661,9 +607,6 @@ void android_ar6k_check_wow_status(AR_SOFTC_T *ar, struct sk_buff *skb, A_BOOL i
         }
         if (needWake) {
             /* keep host wake up if there is any event and packate comming in*/
-#ifdef CONFIG_HAS_WAKELOCK
-            wake_lock_timeout(&ar6k_wow_wake_lock, 3*HZ);
-#endif
             if (wowledon) {
                 char buf[32];
                 int len = sprintf(buf, "on");

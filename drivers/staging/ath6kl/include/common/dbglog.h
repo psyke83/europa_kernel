@@ -1,21 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="dbglog.h" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="dbglog.h" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 
 #ifndef _DBGLOG_H_
 #define _DBGLOG_H_
@@ -85,31 +89,31 @@ extern "C" {
 
 PREPACK struct dbglog_buf_s {
     struct dbglog_buf_s *next;
-    A_UINT8             *buffer;
-    A_UINT32             bufsize;
-    A_UINT32             length;
-    A_UINT32             count;
-    A_UINT32             free;
+    u8 *buffer;
+    u32 bufsize;
+    u32 length;
+    u32 count;
+    u32 free;
 } POSTPACK;
 
 PREPACK struct dbglog_hdr_s {
     struct dbglog_buf_s *dbuf;
-    A_UINT32             dropped;
+    u32 dropped;
 } POSTPACK;
 
 PREPACK struct dbglog_config_s {
-    A_UINT32                    cfgvalid; /* Mask with valid config bits */
+    u32 cfgvalid; /* Mask with valid config bits */
     union {
         /* TODO: Take care of endianness */
         struct {
-            A_UINT32            mmask:16; /* Mask of modules with logging on */
-            A_UINT32            rep:1; /* Reporting enabled or not */
-            A_UINT32            tsr:3; /* Time stamp resolution. Def: 1 ms */
-            A_UINT32            size:10; /* Report size in number of messages */
-            A_UINT32            reserved:2;
+            u32 mmask:16; /* Mask of modules with logging on */
+            u32 rep:1; /* Reporting enabled or not */
+            u32 tsr:3; /* Time stamp resolution. Def: 1 ms */
+            u32 size:10; /* Report size in number of messages */
+            u32 reserved:2;
         } dbglog_config;
 
-        A_UINT32                value;
+        u32 value;
     } u;
 } POSTPACK;
 

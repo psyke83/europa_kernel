@@ -4,14 +4,18 @@
  * All rights reserved.
  *
  * 
-// This program is free software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License version 2 as
-// published by the Free Software Foundation;
 //
-// Software distributed under the License is distributed on an "AS
-// IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-// implied. See the License for the specific language governing
-// rights and limitations under the License.
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 //
  *
@@ -26,7 +30,7 @@ extern "C" {
 
 typedef void (* RX_CALLBACK)(void * dev, void *osbuf);
 
-typedef void (* ALLOC_NETBUFS)(A_NETBUF_QUEUE_T *q, A_UINT16 num);
+typedef void (* ALLOC_NETBUFS)(A_NETBUF_QUEUE_T *q, u16 num);
 
 /*
  * aggr_init:
@@ -60,7 +64,7 @@ aggr_register_rx_dispatcher(void *cntxt, void * dev,  RX_CALLBACK fn);
  * up to the indicated sequence number.
  */
 void
-aggr_process_bar(void *cntxt, A_UINT8 tid, A_UINT16 seq_no);
+aggr_process_bar(void *cntxt, u8 tid, u16 seq_no);
 
 
 /*
@@ -78,7 +82,7 @@ aggr_process_bar(void *cntxt, A_UINT8 tid, A_UINT16 seq_no);
  * in hold_q to OS.
  */
 void
-aggr_recv_addba_req_evt(void * cntxt, A_UINT8 tid, A_UINT16 seq_no, A_UINT8 win_sz);
+aggr_recv_addba_req_evt(void * cntxt, u8 tid, u16 seq_no, u8 win_sz);
 
 
 /*
@@ -89,7 +93,7 @@ aggr_recv_addba_req_evt(void * cntxt, A_UINT8 tid, A_UINT16 seq_no, A_UINT8 win_
  * aggr is not enabled on any tid.
  */
 void
-aggr_recv_delba_req_evt(void * cntxt, A_UINT8 tid);
+aggr_recv_delba_req_evt(void * cntxt, u8 tid);
 
 
 
@@ -104,7 +108,7 @@ aggr_recv_delba_req_evt(void * cntxt, A_UINT8 tid);
  * callback may be called to deliver frames in order.
  */
 void
-aggr_process_recv_frm(void *cntxt, A_UINT8 tid, A_UINT16 seq_no, A_BOOL is_amsdu, void **osbuf);
+aggr_process_recv_frm(void *cntxt, u8 tid, u16 seq_no, bool is_amsdu, void **osbuf);
 
 
 /*

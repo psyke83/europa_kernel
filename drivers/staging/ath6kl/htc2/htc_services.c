@@ -1,38 +1,42 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="htc_services.c" company="Atheros"> */
-/*    Copyright (c) 2007-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="htc_services.c" company="Atheros">
+//    Copyright (c) 2007-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 #include "htc_internal.h"
 
-void HTCControlTxComplete(void *Context, HTC_PACKET *pPacket)
+void HTCControlTxComplete(void *Context, struct htc_packet *pPacket)
 {
         /* not implemented
          * we do not send control TX frames during normal runtime, only during setup  */
-    AR_DEBUG_ASSERT(FALSE);
+    AR_DEBUG_ASSERT(false);
 }
 
     /* callback when a control message arrives on this endpoint */
-void HTCControlRecv(void *Context, HTC_PACKET *pPacket)
+void HTCControlRecv(void *Context, struct htc_packet *pPacket)
 {
     AR_DEBUG_ASSERT(pPacket->Endpoint == ENDPOINT_0);
 
     if (pPacket->Status == A_ECANCELED) {
         /* this is a flush operation, return the control packet back to the pool */
-        HTC_FREE_CONTROL_RX((HTC_TARGET*)Context,pPacket);    
+        HTC_FREE_CONTROL_RX((struct htc_target*)Context,pPacket);    
         return;
     }  
     
@@ -40,7 +44,7 @@ void HTCControlRecv(void *Context, HTC_PACKET *pPacket)
     if (pPacket->ActualLength > 0) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
                         ("HTCControlRecv, got message with length:%d \n",
-                        pPacket->ActualLength + (A_UINT32)HTC_HDR_LENGTH));
+                        pPacket->ActualLength + (u32)HTC_HDR_LENGTH));
 
 #ifdef ATH_DEBUG_MODULE
             /* dump header and message */
@@ -50,13 +54,13 @@ void HTCControlRecv(void *Context, HTC_PACKET *pPacket)
 #endif
     }
 
-    HTC_RECYCLE_RX_PKT((HTC_TARGET*)Context,pPacket,&((HTC_TARGET*)Context)->EndPoint[0]);
+    HTC_RECYCLE_RX_PKT((struct htc_target*)Context,pPacket,&((struct htc_target*)Context)->EndPoint[0]);
 }
 
-A_STATUS HTCSendSetupComplete(HTC_TARGET *target)
+int HTCSendSetupComplete(struct htc_target *target)
 {
-    HTC_PACKET             *pSendPacket = NULL;
-    A_STATUS                status;
+    struct htc_packet             *pSendPacket = NULL;
+    int                status;
 
     do {
            /* allocate a packet to send to the target */
@@ -69,7 +73,7 @@ A_STATUS HTCSendSetupComplete(HTC_TARGET *target)
 
         if (target->HTCTargetVersion >= HTC_VERSION_2P1) {
             HTC_SETUP_COMPLETE_EX_MSG *pSetupCompleteEx;
-            A_UINT32                  setupFlags = 0;
+            u32 setupFlags = 0;
                    
             pSetupCompleteEx = (HTC_SETUP_COMPLETE_EX_MSG *)pSendPacket->pBuffer;
             A_MEMZERO(pSetupCompleteEx, sizeof(HTC_SETUP_COMPLETE_EX_MSG));
@@ -79,10 +83,10 @@ A_STATUS HTCSendSetupComplete(HTC_TARGET *target)
                 setupFlags |= HTC_SETUP_COMPLETE_FLAGS_ENABLE_BUNDLE_RECV; 
                 pSetupCompleteEx->MaxMsgsPerBundledRecv = target->MaxMsgPerBundle;
             }    
-            A_MEMCPY(&pSetupCompleteEx->SetupFlags, &setupFlags, sizeof(pSetupCompleteEx->SetupFlags));            
+            memcpy(&pSetupCompleteEx->SetupFlags, &setupFlags, sizeof(pSetupCompleteEx->SetupFlags));            
             SET_HTC_PACKET_INFO_TX(pSendPacket,
                                    NULL,
-                                   (A_UINT8 *)pSetupCompleteEx,
+                                   (u8 *)pSetupCompleteEx,
                                    sizeof(HTC_SETUP_COMPLETE_EX_MSG),
                                    ENDPOINT_0,
                                    HTC_SERVICE_TX_PACKET_TAG);
@@ -95,7 +99,7 @@ A_STATUS HTCSendSetupComplete(HTC_TARGET *target)
             pSetupComplete->MessageID = HTC_MSG_SETUP_COMPLETE_ID;   
             SET_HTC_PACKET_INFO_TX(pSendPacket,
                                    NULL,
-                                   (A_UINT8 *)pSetupComplete,
+                                   (u8 *)pSetupComplete,
                                    sizeof(HTC_SETUP_COMPLETE_MSG),
                                    ENDPOINT_0,
                                    HTC_SERVICE_TX_PACKET_TAG);
@@ -107,7 +111,7 @@ A_STATUS HTCSendSetupComplete(HTC_TARGET *target)
             /* send the message */
         status = HTCIssueSend(target,pSendPacket);
 
-    } while (FALSE);
+    } while (false);
 
     if (pSendPacket != NULL) {
         HTC_FREE_CONTROL_TX(target,pSendPacket);
@@ -117,18 +121,18 @@ A_STATUS HTCSendSetupComplete(HTC_TARGET *target)
 }
 
 
-A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
-                           HTC_SERVICE_CONNECT_REQ  *pConnectReq,
-                           HTC_SERVICE_CONNECT_RESP *pConnectResp)
+int HTCConnectService(HTC_HANDLE               HTCHandle,
+                           struct htc_service_connect_req  *pConnectReq,
+                           struct htc_service_connect_resp *pConnectResp)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
-    A_STATUS                            status = A_OK;
-    HTC_PACKET                          *pRecvPacket = NULL;
-    HTC_PACKET                          *pSendPacket = NULL;
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    int                            status = 0;
+    struct htc_packet                          *pRecvPacket = NULL;
+    struct htc_packet                          *pSendPacket = NULL;
     HTC_CONNECT_SERVICE_RESPONSE_MSG    *pResponseMsg;
     HTC_CONNECT_SERVICE_MSG             *pConnectMsg;
     HTC_ENDPOINT_ID                     assignedEndpoint = ENDPOINT_MAX;
-    HTC_ENDPOINT                        *pEndpoint;
+    struct htc_endpoint                        *pEndpoint;
     unsigned int                        maxMsgSize = 0;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_TRC, ("+HTCConnectService, target:0x%lX SvcID:0x%X \n",
@@ -147,7 +151,7 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
             pSendPacket = HTC_ALLOC_CONTROL_TX(target);
 
             if (NULL == pSendPacket) {
-                AR_DEBUG_ASSERT(FALSE);
+                AR_DEBUG_ASSERT(false);
                 status = A_NO_MEMORY;
                 break;
             }
@@ -162,7 +166,7 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
             if ((pConnectReq->pMetaData != NULL) &&
                 (pConnectReq->MetaDataLength <= HTC_SERVICE_META_DATA_MAX_LENGTH)) {
                     /* copy meta data into message buffer (after header ) */
-                A_MEMCPY((A_UINT8 *)pConnectMsg + sizeof(HTC_CONNECT_SERVICE_MSG),
+                memcpy((u8 *)pConnectMsg + sizeof(HTC_CONNECT_SERVICE_MSG),
                          pConnectReq->pMetaData,
                          pConnectReq->MetaDataLength);
                 pConnectMsg->ServiceMetaLength = pConnectReq->MetaDataLength;
@@ -170,7 +174,7 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
 
             SET_HTC_PACKET_INFO_TX(pSendPacket,
                                    NULL,
-                                   (A_UINT8 *)pConnectMsg,
+                                   (u8 *)pConnectMsg,
                                    sizeof(HTC_CONNECT_SERVICE_MSG) + pConnectMsg->ServiceMetaLength,
                                    ENDPOINT_0,
                                    HTC_SERVICE_TX_PACKET_TAG);
@@ -180,14 +184,14 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
             HTC_PREPARE_SEND_PKT(pSendPacket,0,0,0);
             status = HTCIssueSend(target,pSendPacket);
 
-            if (A_FAILED(status)) {
+            if (status) {
                 break;
             }
 
                 /* wait for response */
             status = HTCWaitforControlMessage(target, &pRecvPacket);
 
-            if (A_FAILED(status)) {
+            if (status) {
                 break;
             }
                 /* we controlled the buffer creation so it has to be properly aligned */
@@ -196,7 +200,7 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
             if ((pResponseMsg->MessageID != HTC_MSG_CONNECT_SERVICE_RESPONSE_ID) ||
                 (pRecvPacket->ActualLength < sizeof(HTC_CONNECT_SERVICE_RESPONSE_MSG))) {
                     /* this message is not valid */
-                AR_DEBUG_ASSERT(FALSE);
+                AR_DEBUG_ASSERT(false);
                 status = A_EPROTO;
                 break;
             }
@@ -220,8 +224,8 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
                     /* caller supplied a buffer and the target responded with data */
                 int copyLength = min((int)pConnectResp->BufferLength, (int)pResponseMsg->ServiceMetaLength);
                     /* copy the meta data */
-                A_MEMCPY(pConnectResp->pMetaData,
-                         ((A_UINT8 *)pResponseMsg) + sizeof(HTC_CONNECT_SERVICE_RESPONSE_MSG),
+                memcpy(pConnectResp->pMetaData,
+                         ((u8 *)pResponseMsg) + sizeof(HTC_CONNECT_SERVICE_RESPONSE_MSG),
                          copyLength);
                 pConnectResp->ActualLength = copyLength;
             }
@@ -232,12 +236,12 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
         status = A_EPROTO;
 
         if (assignedEndpoint >= ENDPOINT_MAX) {
-            AR_DEBUG_ASSERT(FALSE);
+            AR_DEBUG_ASSERT(false);
             break;
         }
 
         if (0 == maxMsgSize) {
-            AR_DEBUG_ASSERT(FALSE);
+            AR_DEBUG_ASSERT(false);
             break;
         }
 
@@ -245,7 +249,7 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
         pEndpoint->Id = assignedEndpoint;
         if (pEndpoint->ServiceID != 0) {
             /* endpoint already in use! */
-            AR_DEBUG_ASSERT(FALSE);
+            AR_DEBUG_ASSERT(false);
             break;
         }
 
@@ -271,7 +275,7 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
                  * since the host will actually issue smaller messages in the Send path */
             if (pConnectReq->MaxSendMsgSize > maxMsgSize) {
                     /* can't be larger than the maximum the target can support */
-                AR_DEBUG_ASSERT(FALSE);
+                AR_DEBUG_ASSERT(false);
                 break;       
             }
             pEndpoint->CreditDist.TxCreditsPerMaxMsg = pConnectReq->MaxSendMsgSize / target->TargetCreditSize;
@@ -286,9 +290,9 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
             /* save local connection flags */
         pEndpoint->LocalConnectionFlags = pConnectReq->LocalConnectionFlags;
         
-        status = A_OK;
+        status = 0;
 
-    } while (FALSE);
+    } while (false);
 
     if (pSendPacket != NULL) {
         HTC_FREE_CONTROL_TX(target,pSendPacket);
@@ -303,9 +307,9 @@ A_STATUS HTCConnectService(HTC_HANDLE               HTCHandle,
     return status;
 }
 
-static void AddToEndpointDistList(HTC_TARGET *target, HTC_ENDPOINT_CREDIT_DIST *pEpDist)
+static void AddToEndpointDistList(struct htc_target *target, struct htc_endpoint_credit_dist *pEpDist)
 {
-    HTC_ENDPOINT_CREDIT_DIST *pCurEntry,*pLastEntry;
+    struct htc_endpoint_credit_dist *pCurEntry,*pLastEntry;
 
     if (NULL == target->EpCreditDistributionListHead) {
         target->EpCreditDistributionListHead = pEpDist;
@@ -332,10 +336,10 @@ static void AddToEndpointDistList(HTC_TARGET *target, HTC_ENDPOINT_CREDIT_DIST *
 
 /* default credit init callback */
 static void HTCDefaultCreditInit(void                     *Context,
-                                 HTC_ENDPOINT_CREDIT_DIST *pEPList,
+                                 struct htc_endpoint_credit_dist *pEPList,
                                  int                      TotalCredits)
 {
-    HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
+    struct htc_endpoint_credit_dist *pCurEpDist;
     int                      totalEps = 0;
     int                      creditsPerEndpoint;
 
@@ -356,7 +360,7 @@ static void HTCDefaultCreditInit(void                     *Context,
 
         if (creditsPerEndpoint < pCurEpDist->TxCreditsPerMaxMsg) {
                 /* too many endpoints and not enough credits */
-            AR_DEBUG_ASSERT(FALSE);
+            AR_DEBUG_ASSERT(false);
             break;
         }
             /* our minimum is set for at least 1 max message */
@@ -375,10 +379,10 @@ static void HTCDefaultCreditInit(void                     *Context,
 
 /* default credit distribution callback, NOTE, this callback holds the TX lock */
 void HTCDefaultCreditDist(void                     *Context,
-                          HTC_ENDPOINT_CREDIT_DIST *pEPDistList,
+                          struct htc_endpoint_credit_dist *pEPDistList,
                           HTC_CREDIT_DIST_REASON   Reason)
 {
-    HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
+    struct htc_endpoint_credit_dist *pCurEpDist;
 
     if (Reason == HTC_CREDIT_DIST_SEND_COMPLETE) {
         pCurEpDist = pEPDistList;
@@ -404,7 +408,7 @@ void HTCSetCreditDistribution(HTC_HANDLE               HTCHandle,
                               HTC_SERVICE_ID           ServicePriorityOrder[],
                               int                      ListLength)
 {
-    HTC_TARGET *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
+    struct htc_target *target = GET_HTC_TARGET_FROM_HANDLE(HTCHandle);
     int i;
     int ep;
 

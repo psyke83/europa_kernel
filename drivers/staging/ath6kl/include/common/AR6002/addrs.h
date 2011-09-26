@@ -1,20 +1,23 @@
-/*------------------------------------------------------------------------------ */
-/* Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+//
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//
+// Author(s): ="Atheros"
+//------------------------------------------------------------------------------
 
 #ifndef __ADDRS_H__
 #define __ADDRS_H__
@@ -26,13 +29,13 @@
 
 #if defined(AR6002_REV2)
 #define AR6K_RAM_START 0x00500000
-#define TARG_RAM_OFFSET(vaddr) ((A_UINT32)(vaddr) & 0xfffff)
+#define TARG_RAM_OFFSET(vaddr) ((u32)(vaddr) & 0xfffff)
 #define TARG_RAM_SZ (184*1024)
 #define TARG_ROM_SZ (80*1024)
 #endif
 #if defined(AR6002_REV4) || defined(AR6003)
 #define AR6K_RAM_START 0x00540000
-#define TARG_RAM_OFFSET(vaddr) (((A_UINT32)(vaddr) & 0xfffff) - 0x40000)
+#define TARG_RAM_OFFSET(vaddr) (((u32)(vaddr) & 0xfffff) - 0x40000)
 #define TARG_RAM_SZ (256*1024)
 #define TARG_ROM_SZ (256*1024)
 #endif
@@ -46,7 +49,7 @@
 #define TARG_RAM_ADDRS(byte_offset) AR6K_RAM_ADDR(byte_offset)
 
 #define AR6K_ROM_START 0x004e0000
-#define TARG_ROM_OFFSET(vaddr) (((A_UINT32)(vaddr) & 0x1fffff) - 0xe0000)
+#define TARG_ROM_OFFSET(vaddr) (((u32)(vaddr) & 0x1fffff) - 0xe0000)
 #define AR6K_ROM_ADDR(byte_offset) (AR6K_ROM_START+(byte_offset))
 #define TARG_ROM_ADDRS(byte_offset) AR6K_ROM_ADDR(byte_offset)
 

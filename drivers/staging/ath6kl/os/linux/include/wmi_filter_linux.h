@@ -1,21 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* Copyright (c) 2004-2010 Atheros Communications Inc. */
-/* All rights reserved. */
-/* */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/* */
-/* Author(s): ="Atheros" */
-/*------------------------------------------------------------------------------ */
+//------------------------------------------------------------------------------
+// Copyright (c) 2004-2010 Atheros Communications Inc.
+// All rights reserved.
+//
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//
+// Author(s): ="Atheros"
+//------------------------------------------------------------------------------
 
 #ifndef _WMI_FILTER_LINUX_H_
 #define  _WMI_FILTER_LINUX_H_
@@ -37,7 +41,7 @@
  * (0xFF) - Allow this cmd always irrespective of mode
  */
 
-A_UINT8 sioctl_filter[] = {
+u8 sioctl_filter[] = {
 (AP_NETWORK),                                   /* SIOCSIWCOMMIT   0x8B00   */
 (0xFF),                                         /* SIOCGIWNAME     0x8B01   */
 (0),                                            /* SIOCSIWNWID     0x8B02   */
@@ -92,7 +96,7 @@ A_UINT8 sioctl_filter[] = {
 
 
 
-A_UINT8 pioctl_filter[] = {
+u8 pioctl_filter[] = {
 (INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* IEEE80211_IOCTL_SETPARAM             (SIOCIWFIRSTPRIV+0)     */
 (INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* IEEE80211_IOCTL_SETKEY               (SIOCIWFIRSTPRIV+1)     */
 (INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* IEEE80211_IOCTL_DELKEY               (SIOCIWFIRSTPRIV+2)     */
@@ -128,7 +132,7 @@ A_UINT8 pioctl_filter[] = {
 
 
 
-A_UINT8 xioctl_filter[] = {
+u8 xioctl_filter[] = {
 (0xFF),                                         /* Dummy                                           0    */
 (0xFF),                                         /* AR6000_XIOCTL_BMI_DONE                          1    */
 (0xFF),                                         /* AR6000_XIOCTL_BMI_READ_MEMORY                   2    */
@@ -202,11 +206,11 @@ A_UINT8 xioctl_filter[] = {
 (0xFF),                                         /* AR6000_XIOCTL_WMI_SET_WSC_STATUS                70   */
 (INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_SET_BT_STATUS                 71   */
 (INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_SET_BT_PARAMS                 72   */
-(INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* AR6000_XIOCTL_WMI_SET_HOST_SLEEP_MODE           73   */
-(INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* AR6000_XIOCTL_WMI_SET_WOW_MODE                  74   */
-(INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* AR6000_XIOCTL_WMI_GET_WOW_LIST                  75   */
-(INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* AR6000_XIOCTL_WMI_ADD_WOW_PATTERN               76   */
-(INFRA_NETWORK | ADHOC_NETWORK | AP_NETWORK),   /* AR6000_XIOCTL_WMI_DEL_WOW_PATTERN               77   */
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_SET_HOST_SLEEP_MODE           73   */
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_SET_WOW_MODE                  74   */
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_GET_WOW_LIST                  75   */
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_ADD_WOW_PATTERN               76   */
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_DEL_WOW_PATTERN               77   */
 (0xFF),                                         /* AR6000_XIOCTL_TARGET_INFO                       78   */
 (0xFF),                                         /* AR6000_XIOCTL_DUMP_HTC_CREDIT_STATE             79   */
 (0xFF),                                         /* AR6000_XIOCTL_TRAFFIC_ACTIVITY_CHANGE           80   */
@@ -284,6 +288,13 @@ A_UINT8 xioctl_filter[] = {
 (0xFF),                                         /* AR6000_XIOCTL_ADD_AP_INTERFACE                  152  */
 (0xFF),                                         /* AR6000_XIOCTL_REMOVE_AP_INTERFACE               153  */
 (0xFF),                                         /* AR6000_XIOCTL_WMI_SET_TX_SGI_PARAM              154  */
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_SET_WPA_OFFLOAD_STATE         155  */
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_SET_PASSPHRASE                156  */
+(0xFF),
+(0xFF),
+(0xFF),
+(0xFF),
+(INFRA_NETWORK | ADHOC_NETWORK),                /* AR6000_XIOCTL_WMI_SET_EXCESS_TX_RETRY_THRES     161  */
 };
 
 #endif /*_WMI_FILTER_LINUX_H_*/

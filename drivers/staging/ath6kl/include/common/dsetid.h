@@ -1,21 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="dsetid.h" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="dsetid.h" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 
 
 #ifndef __DSETID_H__
@@ -77,8 +81,8 @@
  * This allows for patches to be stored in flash.
  */
 PREPACK struct patch_s {
-    A_UINT32 *address;
-    A_UINT32  data;
+    u32 *address;
+    u32 data;
 } POSTPACK ;
 
 /*
@@ -88,23 +92,23 @@ PREPACK struct patch_s {
  * patch code.  The "data" in a PATCH_SKIP tells how many
  * bytes of length "patch_s" to skip.
  */
-#define PATCH_SKIP      ((A_UINT32 *)0x00000000)
+#define PATCH_SKIP      ((u32 *)0x00000000)
 
 /*
  * Execute code at the address specified by "data".
  * The address of the patch structure is passed as
  * the one parameter.
  */
-#define PATCH_CODE_ABS  ((A_UINT32 *)0x00000001)
+#define PATCH_CODE_ABS  ((u32 *)0x00000001)
 
 /*
  * Same as PATCH_CODE_ABS, but treat "data" as an
  * offset from the start of the patch word.
  */
-#define PATCH_CODE_REL  ((A_UINT32 *)0x00000002)
+#define PATCH_CODE_REL  ((u32 *)0x00000002)
 
 /* Mark the end of this patch DataSet. */
-#define PATCH_END       ((A_UINT32 *)0xffffffff)
+#define PATCH_END       ((u32 *)0xffffffff)
 
 /*
  * A DataSet which contains a Binary Patch to some other DataSet

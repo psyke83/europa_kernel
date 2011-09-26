@@ -1,24 +1,28 @@
-/*------------------------------------------------------------------------------ */
-/* This file contains the definitions of the basic atheros data types. */
-/* It is used to map the data types in atheros files to a platform specific */
-/* type. */
-/* Copyright (c) 2004-2010 Atheros Communications Inc. */
-/* All rights reserved. */
-/* */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/* */
-/* Author(s): ="Atheros" */
-/*------------------------------------------------------------------------------ */
+//------------------------------------------------------------------------------
+// This file contains the definitions of the basic atheros data types.
+// It is used to map the data types in atheros files to a platform specific
+// type.
+// Copyright (c) 2004-2010 Atheros Communications Inc.
+// All rights reserved.
+//
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//
+// Author(s): ="Atheros"
+//------------------------------------------------------------------------------
 
 #ifndef _OSAPI_LINUX_H_
 #define _OSAPI_LINUX_H_
@@ -31,17 +35,11 @@
 #include <linux/string.h>
 #include <linux/skbuff.h>
 #include <linux/netdevice.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 #include <linux/jiffies.h>
-#endif
 #include <linux/timer.h>
 #include <linux/delay.h>
 #include <linux/wait.h>
-#ifdef KERNEL_2_4
-#include <asm/arch/irq.h>
-#include <asm/irq.h>
-#endif
-
+#include <linux/semaphore.h>
 #include <linux/cache.h>
 
 #ifdef __GNUC__
@@ -78,30 +76,10 @@
 #define A_CPU2BE16(x)      htons(x)
 #define A_CPU2BE32(x)      htonl(x)
 
-#define A_MEMCPY(dst, src, len)         memcpy((A_UINT8 *)(dst), (src), (len))
 #define A_MEMZERO(addr, len)            memset(addr, 0, len)
-#define A_MEMCMP(addr1, addr2, len)     memcmp((addr1), (addr2), (len))
-
-#ifdef AR6K_ALLOC_DEBUG
-#define a_meminfo_add(p, s)  __a_meminfo_add(p, s, __func__, __LINE)
-void __a_meminfo_add(void *ptr, size_t msize, const char *func, int lineno);
-void  a_meminfo_del(void *ptr);
-void* a_mem_alloc(size_t msize, int type, const char *func, int lineno);
-void a_mem_free(void *ptr);
-void a_meminfo_report(int clear);
-#define A_MALLOC(size)                  a_mem_alloc((size), GFP_KERNEL, __func__, __LINE__)
-#define A_MALLOC_NOWAIT(size)           a_mem_alloc((size), GFP_ATOMIC, __func__, __LINE__)
-#define A_FREE(addr)                    a_mem_free(addr)
-#define A_NETIF_RX(skb)                 do { a_meminfo_del(skb);  netif_rx(skb); } while (0)
-#define A_NETIF_RX_NI(skb)              do { a_meminfo_del(skb);  netif_rx_ni(skb); } while (0)
-#else
-#define a_meminfo_report(_c)
 #define A_MALLOC(size)                  kmalloc((size), GFP_KERNEL)
 #define A_MALLOC_NOWAIT(size)           kmalloc((size), GFP_ATOMIC)
 #define A_FREE(addr)                    kfree(addr)
-#define A_NETIF_RX(skb)                 netif_rx(skb)
-#define A_NETIF_RX_NI(skb)              netif_rx_ni(skb)
-#endif
 
 #if defined(ANDROID_ENV) && defined(CONFIG_ANDROID_LOGGER)
 extern unsigned int enablelogcat;
@@ -136,7 +114,7 @@ typedef spinlock_t                      A_MUTEX_T;
 #define A_MUTEX_INIT(mutex)             spin_lock_init(mutex)
 #define A_MUTEX_LOCK(mutex)             spin_lock_bh(mutex)
 #define A_MUTEX_UNLOCK(mutex)           spin_unlock_bh(mutex)
-#define A_IS_MUTEX_VALID(mutex)         TRUE  /* okay to return true, since A_MUTEX_DELETE does nothing */
+#define A_IS_MUTEX_VALID(mutex)         true  /* okay to return true, since A_MUTEX_DELETE does nothing */
 #define A_MUTEX_DELETE(mutex)           /* spin locks are not kernel resources so nothing to free.. */
 
 /* Get current time in ms adding a constant offset (in ms) */
@@ -267,22 +245,15 @@ typedef struct sk_buff_head A_NETBUF_QUEUE_T;
 #define A_NETBUF_QUEUE_SIZE(q)  \
     a_netbuf_queue_size(q)
 #define A_NETBUF_QUEUE_EMPTY(q) \
-    a_netbuf_queue_empty(q)
+    (a_netbuf_queue_empty(q) ? true : false)
 
 /*
  * Network buffer support
  */
-#ifdef AR6K_ALLOC_DEBUG
-#define A_NETBUF_ALLOC(size) \
-    a_netbuf_alloc(size, __func__, __LINE__)
-#define A_NETBUF_ALLOC_RAW(size) \
-    a_netbuf_alloc_raw(size, __func__, __LINE__)
-#else
 #define A_NETBUF_ALLOC(size) \
     a_netbuf_alloc(size)
 #define A_NETBUF_ALLOC_RAW(size) \
     a_netbuf_alloc_raw(size)
-#endif /* AR6K_ALLOC_DEBUG */
 #define A_NETBUF_FREE(bufPtr) \
     a_netbuf_free(bufPtr)
 #define A_NETBUF_DATA(bufPtr) \
@@ -329,26 +300,21 @@ typedef struct sk_buff_head A_NETBUF_QUEUE_T;
 /*
  * OS specific network buffer access routines
  */
-#ifdef AR6K_ALLOC_DEBUG
-void *a_netbuf_alloc(int size, const char *func, int lineno);
-void *a_netbuf_alloc_raw(int size, const char *func, int lineno);
-#else
 void *a_netbuf_alloc(int size);
 void *a_netbuf_alloc_raw(int size);
-#endif
 void a_netbuf_free(void *bufPtr);
 void *a_netbuf_to_data(void *bufPtr);
-A_UINT32 a_netbuf_to_len(void *bufPtr);
-A_STATUS a_netbuf_push(void *bufPtr, A_INT32 len);
-A_STATUS a_netbuf_push_data(void *bufPtr, char *srcPtr, A_INT32 len);
-A_STATUS a_netbuf_put(void *bufPtr, A_INT32 len);
-A_STATUS a_netbuf_put_data(void *bufPtr, char *srcPtr, A_INT32 len);
-A_STATUS a_netbuf_pull(void *bufPtr, A_INT32 len);
-A_STATUS a_netbuf_pull_data(void *bufPtr, char *dstPtr, A_INT32 len);
-A_STATUS a_netbuf_trim(void *bufPtr, A_INT32 len);
-A_STATUS a_netbuf_trim_data(void *bufPtr, char *dstPtr, A_INT32 len);
-A_STATUS a_netbuf_setlen(void *bufPtr, A_INT32 len);
-A_INT32 a_netbuf_headroom(void *bufPtr);
+u32 a_netbuf_to_len(void *bufPtr);
+int a_netbuf_push(void *bufPtr, s32 len);
+int a_netbuf_push_data(void *bufPtr, char *srcPtr, s32 len);
+int a_netbuf_put(void *bufPtr, s32 len);
+int a_netbuf_put_data(void *bufPtr, char *srcPtr, s32 len);
+int a_netbuf_pull(void *bufPtr, s32 len);
+int a_netbuf_pull_data(void *bufPtr, char *dstPtr, s32 len);
+int a_netbuf_trim(void *bufPtr, s32 len);
+int a_netbuf_trim_data(void *bufPtr, char *dstPtr, s32 len);
+int a_netbuf_setlen(void *bufPtr, s32 len);
+s32 a_netbuf_headroom(void *bufPtr);
 void a_netbuf_enqueue(A_NETBUF_QUEUE_T *q, void *pkt);
 void a_netbuf_prequeue(A_NETBUF_QUEUE_T *q, void *pkt);
 void *a_netbuf_dequeue(A_NETBUF_QUEUE_T *q);
@@ -360,8 +326,8 @@ void a_netbuf_queue_init(A_NETBUF_QUEUE_T *q);
 /*
  * Kernel v.s User space functions
  */
-A_UINT32 a_copy_to_user(void *to, const void *from, A_UINT32 n);
-A_UINT32 a_copy_from_user(void *to, const void *from, A_UINT32 n);
+u32 a_copy_to_user(void *to, const void *from, u32 n);
+u32 a_copy_from_user(void *to, const void *from, u32 n);
 
 /* In linux, WLAN Rx and Tx run in different contexts, so no need to check
  * for any commands/data queued for WLAN */
@@ -396,9 +362,7 @@ static inline void *A_ALIGN_TO_CACHE_LINE(void *ptr) {
 #define PREPACK
 #define POSTPACK                __ATTRIB_PACK
 
-#define A_MEMCPY(dst, src, len)         memcpy((dst), (src), (len))
 #define A_MEMZERO(addr, len)            memset((addr), 0, (len))
-#define A_MEMCMP(addr1, addr2, len)     memcmp((addr1), (addr2), (len))
 #define A_MALLOC(size)                  malloc(size)
 #define A_FREE(addr)                    free(addr)
 

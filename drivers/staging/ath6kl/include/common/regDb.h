@@ -1,5 +1,5 @@
-// ------------------------------------------------------------------
-// Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+//------------------------------------------------------------------------------
+// Copyright (c) 2005-2010 Atheros Corporation.  All rights reserved.
 // 
 //
 // Permission to use, copy, modify, and/or distribute this software for any
@@ -15,23 +15,15 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 //
 //
-// ------------------------------------------------------------------
-//===================================================================
+//------------------------------------------------------------------------------
+//==============================================================================
 // Author(s): ="Atheros"
-//===================================================================
+//==============================================================================
 
+#ifndef __REG_DB_H__
+#define __REG_DB_H__
 
-#ifdef WLAN_HEADERS
+#include "./regulatory/reg_dbschema.h"
+#include "./regulatory/reg_dbvalues.h"
 
-#include "analog_intf_athr_wlan_reg.h"
-
-
-#ifndef BT_HEADERS
-
-
-
-#endif
-#endif
-
-
-
+#endif  /* __REG_DB_H__ */

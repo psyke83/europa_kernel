@@ -1,21 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="testcmd.h" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="testcmd.h" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 
 #ifndef  TESTCMD_H_
 #define  TESTCMD_H_
@@ -78,20 +82,20 @@ typedef enum {
 } TCMD_WLAN_MODE;
 
 typedef PREPACK struct {
-    A_UINT32                testCmdId;
-    A_UINT32                mode;
-    A_UINT32                freq;
-    A_UINT32                dataRate;
-    A_INT32                 txPwr;
-    A_UINT32                antenna;
-    A_UINT32                enANI;
-    A_UINT32                scramblerOff;
-    A_UINT32                aifsn;
-    A_UINT16                pktSz;
-    A_UINT16                txPattern;
-    A_UINT32                shortGuard;
-    A_UINT32                numPackets;
-    A_UINT32                wlanMode;
+    u32 testCmdId;
+    u32 mode;
+    u32 freq;
+    u32 dataRate;
+    s32 txPwr;
+    u32 antenna;
+    u32 enANI;
+    u32 scramblerOff;
+    u32 aifsn;
+    u16 pktSz;
+    u16 txPattern;
+    u32 shortGuard;
+    u32 numPackets;
+    u32 wlanMode;
 } POSTPACK TCMD_CONT_TX;
 
 #define TCMD_TXPATTERN_ZERONE                 0x1
@@ -120,29 +124,29 @@ typedef enum {
 } TCMD_CONT_RX_ACT;
 
 typedef PREPACK struct {
-    A_UINT32         testCmdId;
-    A_UINT32        act;
-    A_UINT32        enANI;
+    u32 testCmdId;
+    u32 act;
+    u32 enANI;
     PREPACK union {
         struct PREPACK TCMD_CONT_RX_PARA {
-            A_UINT32    freq;
-            A_UINT32    antenna;
-            A_UINT32    wlanMode;
+            u32 freq;
+            u32 antenna;
+            u32 wlanMode;
         } POSTPACK para;
         struct PREPACK TCMD_CONT_RX_REPORT {
-            A_UINT32    totalPkt;
-            A_INT32     rssiInDBm;
-            A_UINT32    crcErrPkt;
-            A_UINT32    secErrPkt;
-            A_UINT16    rateCnt[TCMD_MAX_RATES];
-            A_UINT16    rateCntShortGuard[TCMD_MAX_RATES];
+            u32 totalPkt;
+            s32 rssiInDBm;
+            u32 crcErrPkt;
+            u32 secErrPkt;
+            u16 rateCnt[TCMD_MAX_RATES];
+            u16 rateCntShortGuard[TCMD_MAX_RATES];
         } POSTPACK report;
         struct PREPACK TCMD_CONT_RX_MAC {
-            A_UCHAR    addr[ATH_MAC_LEN];
+            u8    addr[ATH_MAC_LEN];
         } POSTPACK mac;
         struct PREPACK TCMD_CONT_RX_ANT_SWITCH_TABLE {
-            A_UINT32                antswitch1;
-            A_UINT32                antswitch2;
+            u32 antswitch1;
+            u32 antswitch2;
         }POSTPACK antswitchtable;
     } POSTPACK u;
 } POSTPACK TCMD_CONT_RX;
@@ -158,8 +162,8 @@ typedef enum {
 } TCMD_PM_MODE;
 
 typedef PREPACK struct {
-    A_UINT32  testCmdId;
-    A_UINT32  mode;
+    u32 testCmdId;
+    u32 mode;
 } POSTPACK TCMD_PM;
 
 typedef enum {

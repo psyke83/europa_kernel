@@ -1,23 +1,27 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="bmi.h" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* BMI declarations and prototypes */
-/* */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="bmi.h" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// BMI declarations and prototypes
+//
+// Author(s): ="Atheros"
+//==============================================================================
 #ifndef _BMI_H_
 #define _BMI_H_
 
@@ -39,90 +43,90 @@ BMIInit(void);
 void
 BMICleanup(void);
 
-A_STATUS
-BMIDone(HIF_DEVICE *device);
+int
+BMIDone(struct hif_device *device);
 
-A_STATUS
-BMIGetTargetInfo(HIF_DEVICE *device, struct bmi_target_info *targ_info);
+int
+BMIGetTargetInfo(struct hif_device *device, struct bmi_target_info *targ_info);
 
-A_STATUS
-BMIReadMemory(HIF_DEVICE *device,
-              A_UINT32 address,
-              A_UCHAR *buffer,
-              A_UINT32 length);
+int
+BMIReadMemory(struct hif_device *device,
+              u32 address,
+              u8 *buffer,
+              u32 length);
 
-A_STATUS
-BMIWriteMemory(HIF_DEVICE *device,
-               A_UINT32 address,
-               A_UCHAR *buffer,
-               A_UINT32 length);
+int
+BMIWriteMemory(struct hif_device *device,
+               u32 address,
+               u8 *buffer,
+               u32 length);
 
-A_STATUS
-BMIExecute(HIF_DEVICE *device,
-           A_UINT32 address,
-           A_UINT32 *param);
+int
+BMIExecute(struct hif_device *device,
+           u32 address,
+           u32 *param);
 
-A_STATUS
-BMISetAppStart(HIF_DEVICE *device,
-               A_UINT32 address);
+int
+BMISetAppStart(struct hif_device *device,
+               u32 address);
 
-A_STATUS
-BMIReadSOCRegister(HIF_DEVICE *device,
-                   A_UINT32 address,
-                   A_UINT32 *param);
+int
+BMIReadSOCRegister(struct hif_device *device,
+                   u32 address,
+                   u32 *param);
 
-A_STATUS
-BMIWriteSOCRegister(HIF_DEVICE *device,
-                    A_UINT32 address,
-                    A_UINT32 param);
+int
+BMIWriteSOCRegister(struct hif_device *device,
+                    u32 address,
+                    u32 param);
 
-A_STATUS
-BMIrompatchInstall(HIF_DEVICE *device,
-                   A_UINT32 ROM_addr,
-                   A_UINT32 RAM_addr,
-                   A_UINT32 nbytes,
-                   A_UINT32 do_activate,
-                   A_UINT32 *patch_id);
+int
+BMIrompatchInstall(struct hif_device *device,
+                   u32 ROM_addr,
+                   u32 RAM_addr,
+                   u32 nbytes,
+                   u32 do_activate,
+                   u32 *patch_id);
 
-A_STATUS
-BMIrompatchUninstall(HIF_DEVICE *device,
-                     A_UINT32 rompatch_id);
+int
+BMIrompatchUninstall(struct hif_device *device,
+                     u32 rompatch_id);
 
-A_STATUS
-BMIrompatchActivate(HIF_DEVICE *device,
-                    A_UINT32 rompatch_count,
-                    A_UINT32 *rompatch_list);
+int
+BMIrompatchActivate(struct hif_device *device,
+                    u32 rompatch_count,
+                    u32 *rompatch_list);
 
-A_STATUS
-BMIrompatchDeactivate(HIF_DEVICE *device,
-                      A_UINT32 rompatch_count,
-                      A_UINT32 *rompatch_list);
+int
+BMIrompatchDeactivate(struct hif_device *device,
+                      u32 rompatch_count,
+                      u32 *rompatch_list);
 
-A_STATUS
-BMILZStreamStart(HIF_DEVICE *device,
-                 A_UINT32 address);
+int
+BMILZStreamStart(struct hif_device *device,
+                 u32 address);
 
-A_STATUS
-BMILZData(HIF_DEVICE *device,
-          A_UCHAR *buffer,
-          A_UINT32 length);
+int
+BMILZData(struct hif_device *device,
+          u8 *buffer,
+          u32 length);
 
-A_STATUS
-BMIFastDownload(HIF_DEVICE *device,
-                A_UINT32 address,
-                A_UCHAR *buffer,
-                A_UINT32 length);
+int
+BMIFastDownload(struct hif_device *device,
+                u32 address,
+                u8 *buffer,
+                u32 length);
 
-A_STATUS
-BMIRawWrite(HIF_DEVICE *device,
-            A_UCHAR *buffer,
-            A_UINT32 length);
+int
+BMIRawWrite(struct hif_device *device,
+            u8 *buffer,
+            u32 length);
 
-A_STATUS
-BMIRawRead(HIF_DEVICE *device, 
-           A_UCHAR *buffer, 
-           A_UINT32 length, 
-           A_BOOL want_timeout);
+int
+BMIRawRead(struct hif_device *device, 
+           u8 *buffer, 
+           u32 length,
+           bool want_timeout);
 
 #ifdef __cplusplus
 }

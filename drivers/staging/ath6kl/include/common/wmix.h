@@ -1,21 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="wmix.h" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="wmix.h" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 
 /*
  * This file contains extensions of the WMI protocol specified in the
@@ -51,7 +55,7 @@ extern "C" {
  * WMI_EVENT_ID=WMI_EXTENSION_EVENTID.
  */
 typedef PREPACK struct {
-    A_UINT32    commandId;
+    u32 commandId;
 } POSTPACK WMIX_CMD_HDR;
 
 typedef enum {
@@ -92,10 +96,10 @@ typedef enum {
  * DataSet Open Request Event
  */
 typedef PREPACK struct {
-    A_UINT32 dset_id;
-    A_UINT32 targ_dset_handle;  /* echo'ed, not used by Host, */
-    A_UINT32 targ_reply_fn;     /* echo'ed, not used by Host, */
-    A_UINT32 targ_reply_arg;    /* echo'ed, not used by Host, */
+    u32 dset_id;
+    u32 targ_dset_handle;  /* echo'ed, not used by Host, */
+    u32 targ_reply_fn;     /* echo'ed, not used by Host, */
+    u32 targ_reply_arg;    /* echo'ed, not used by Host, */
 } POSTPACK WMIX_DSETOPENREQ_EVENT;
 
 /*
@@ -103,7 +107,7 @@ typedef PREPACK struct {
  * DataSet Close Event
  */
 typedef PREPACK struct {
-    A_UINT32 access_cookie;
+    u32 access_cookie;
 } POSTPACK WMIX_DSETCLOSE_EVENT;
 
 /*
@@ -111,31 +115,31 @@ typedef PREPACK struct {
  * DataSet Data Request Event
  */
 typedef PREPACK struct {
-    A_UINT32 access_cookie;
-    A_UINT32 offset;
-    A_UINT32 length;
-    A_UINT32 targ_buf;         /* echo'ed, not used by Host, */
-    A_UINT32 targ_reply_fn;    /* echo'ed, not used by Host, */
-    A_UINT32 targ_reply_arg;   /* echo'ed, not used by Host, */
+    u32 access_cookie;
+    u32 offset;
+    u32 length;
+    u32 targ_buf;         /* echo'ed, not used by Host, */
+    u32 targ_reply_fn;    /* echo'ed, not used by Host, */
+    u32 targ_reply_arg;   /* echo'ed, not used by Host, */
 } POSTPACK WMIX_DSETDATAREQ_EVENT;
 
 typedef PREPACK struct {
-    A_UINT32              status;
-    A_UINT32              targ_dset_handle;
-    A_UINT32              targ_reply_fn;
-    A_UINT32              targ_reply_arg;
-    A_UINT32              access_cookie;
-    A_UINT32              size;
-    A_UINT32              version;
+    u32 status;
+    u32 targ_dset_handle;
+    u32 targ_reply_fn;
+    u32 targ_reply_arg;
+    u32 access_cookie;
+    u32 size;
+    u32 version;
 } POSTPACK WMIX_DSETOPEN_REPLY_CMD;
 
 typedef PREPACK struct {
-    A_UINT32              status;
-    A_UINT32              targ_buf;
-    A_UINT32              targ_reply_fn;
-    A_UINT32              targ_reply_arg;
-    A_UINT32              length;
-    A_UINT8               buf[1];
+    u32 status;
+    u32 targ_buf;
+    u32 targ_reply_fn;
+    u32 targ_reply_arg;
+    u32 length;
+    u8 buf[1];
 } POSTPACK WMIX_DSETDATA_REPLY_CMD;
 
 
@@ -156,10 +160,10 @@ typedef PREPACK struct {
  * clear/disable or disable/enable, results are undefined.
  */
 typedef PREPACK struct {
-    A_UINT32              set_mask;             /* pins to set */
-    A_UINT32              clear_mask;           /* pins to clear */
-    A_UINT32              enable_mask;          /* pins to enable for output */
-    A_UINT32              disable_mask;         /* pins to disable/tristate */
+    u32 set_mask;             /* pins to set */
+    u32 clear_mask;           /* pins to clear */
+    u32 enable_mask;          /* pins to enable for output */
+    u32 disable_mask;         /* pins to disable/tristate */
 } POSTPACK WMIX_GPIO_OUTPUT_SET_CMD;
 
 /* 
@@ -168,13 +172,13 @@ typedef PREPACK struct {
  * platform-dependent header.
  */
 typedef PREPACK struct {
-    A_UINT32              gpioreg_id;           /* GPIO register ID */
-    A_UINT32              value;                /* value to write */
+    u32 gpioreg_id;           /* GPIO register ID */
+    u32 value;                /* value to write */
 } POSTPACK WMIX_GPIO_REGISTER_SET_CMD;
 
 /* Get a GPIO register.  For debug/exceptional cases. */
 typedef PREPACK struct {
-    A_UINT32              gpioreg_id;           /* GPIO register to read */
+    u32 gpioreg_id;           /* GPIO register to read */
 } POSTPACK WMIX_GPIO_REGISTER_GET_CMD;
 
 /*
@@ -183,7 +187,7 @@ typedef PREPACK struct {
  * were delivered in an earlier WMIX_GPIO_INTR_EVENT message.
  */
 typedef PREPACK struct {
-    A_UINT32              ack_mask;             /* interrupts to acknowledge */
+    u32 ack_mask;             /* interrupts to acknowledge */
 } POSTPACK WMIX_GPIO_INTR_ACK_CMD;
 
 /*
@@ -193,8 +197,8 @@ typedef PREPACK struct {
  * use of a GPIO interrupt as a Data Valid signal for other GPIO pins.
  */
 typedef PREPACK struct {
-    A_UINT32              intr_mask;            /* pending GPIO interrupts */
-    A_UINT32              input_values;         /* recent GPIO input values */
+    u32 intr_mask;            /* pending GPIO interrupts */
+    u32 input_values;         /* recent GPIO input values */
 } POSTPACK WMIX_GPIO_INTR_EVENT;
 
 /*
@@ -213,8 +217,8 @@ typedef PREPACK struct {
  * simplify Host GPIO support.
  */
 typedef PREPACK struct {
-    A_UINT32              value;
-    A_UINT32              reg_id;
+    u32 value;
+    u32 reg_id;
 } POSTPACK WMIX_GPIO_DATA_EVENT;
 
 /*
@@ -226,8 +230,8 @@ typedef PREPACK struct {
  * Heartbeat Challenge Response command
  */
 typedef PREPACK struct {
-    A_UINT32              cookie;
-    A_UINT32              source;
+    u32 cookie;
+    u32 source;
 } POSTPACK WMIX_HB_CHALLENGE_RESP_CMD;
 
 /*
@@ -245,12 +249,12 @@ typedef PREPACK struct {
  */
 
 typedef PREPACK struct {
-    A_UINT32 period; /* Time (in 30.5us ticks) between samples */
-    A_UINT32 nbins;
+    u32 period; /* Time (in 30.5us ticks) between samples */
+    u32 nbins;
 } POSTPACK WMIX_PROF_CFG_CMD;
 
 typedef PREPACK struct {
-    A_UINT32 addr;
+    u32 addr;
 } POSTPACK WMIX_PROF_ADDR_SET_CMD;
 
 /*
@@ -260,8 +264,8 @@ typedef PREPACK struct {
  *   count set to the corresponding count
  */
 typedef PREPACK struct {
-    A_UINT32              addr;
-    A_UINT32              count;
+    u32 addr;
+    u32 count;
 } POSTPACK WMIX_PROF_COUNT_EVENT;
 
 #ifndef ATH_TARGET

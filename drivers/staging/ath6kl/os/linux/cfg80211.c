@@ -1,24 +1,26 @@
-/*------------------------------------------------------------------------------ */
-/* Copyright (c) 2004-2010 Atheros Communications Inc. */
-/* All rights reserved. */
-/* */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/* */
-/* Author(s): ="Atheros" */
-/*------------------------------------------------------------------------------ */
+//------------------------------------------------------------------------------
+// Copyright (c) 2004-2010 Atheros Communications Inc.
+// All rights reserved.
+//
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//
+// Author(s): ="Atheros"
+//------------------------------------------------------------------------------
 
-#include <linux/kernel.h>
-#include <linux/netdevice.h>
 #include <linux/wireless.h>
 #include <linux/ieee80211.h>
 #include <net/cfg80211.h>
@@ -134,7 +136,7 @@ ieee80211_supported_band ar6k_band_5ghz = {
 };
 
 static int
-ar6k_set_wpa_version(AR_SOFTC_T *ar, enum nl80211_wpa_versions wpa_version)
+ar6k_set_wpa_version(struct ar6_softc *ar, enum nl80211_wpa_versions wpa_version)
 {
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: %u\n", __func__, wpa_version));
@@ -151,11 +153,11 @@ ar6k_set_wpa_version(AR_SOFTC_T *ar, enum nl80211_wpa_versions wpa_version)
         return -ENOTSUPP;
     }
 
-    return A_OK;
+    return 0;
 }
 
 static int
-ar6k_set_auth_type(AR_SOFTC_T *ar, enum nl80211_auth_type auth_type)
+ar6k_set_auth_type(struct ar6_softc *ar, enum nl80211_auth_type auth_type)
 {
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: 0x%x\n", __func__, auth_type));
@@ -177,15 +179,15 @@ ar6k_set_auth_type(AR_SOFTC_T *ar, enum nl80211_auth_type auth_type)
         return -ENOTSUPP;
     }
 
-    return A_OK;
+    return 0;
 }
 
 static int
-ar6k_set_cipher(AR_SOFTC_T *ar, A_UINT32 cipher, A_BOOL ucast)
+ar6k_set_cipher(struct ar6_softc *ar, u32 cipher, bool ucast)
 {
-    A_UINT8  *ar_cipher = ucast ? &ar->arPairwiseCrypto :
+    u8 *ar_cipher = ucast ? &ar->arPairwiseCrypto :
                                 &ar->arGroupCrypto;
-    A_UINT8  *ar_cipher_len = ucast ? &ar->arPairwiseCryptoLen :
+    u8 *ar_cipher_len = ucast ? &ar->arPairwiseCryptoLen :
                                     &ar->arGroupCryptoLen;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
@@ -219,11 +221,11 @@ ar6k_set_cipher(AR_SOFTC_T *ar, A_UINT32 cipher, A_BOOL ucast)
         return -ENOTSUPP;
     }
 
-    return A_OK;
+    return 0;
 }
 
 static void
-ar6k_set_key_mgmt(AR_SOFTC_T *ar, A_UINT32 key_mgmt)
+ar6k_set_key_mgmt(struct ar6_softc *ar, u32 key_mgmt)
 {
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: 0x%x\n", __func__, key_mgmt));
 
@@ -242,12 +244,13 @@ static int
 ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
                       struct cfg80211_connect_params *sme)
 {
-    AR_SOFTC_T *ar = ar6k_priv(dev);
-    A_STATUS status;
+    struct ar6_softc *ar = ar6k_priv(dev);
+    int status;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: \n", __func__));
+    ar->smeState = SME_CONNECTING;
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready yet\n", __func__));
         return -EIO;
     }
@@ -267,7 +270,7 @@ ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
         return -EINVAL;
     }
 
-    if(ar->arSkipScan == TRUE &&
+    if(ar->arSkipScan == true &&
        ((sme->channel && sme->channel->center_freq == 0) ||
         (sme->bssid && !sme->bssid[0] && !sme->bssid[1] && !sme->bssid[2] &&
          !sme->bssid[3] && !sme->bssid[4] && !sme->bssid[5])))
@@ -300,28 +303,28 @@ ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
         }
     }
 
-    if(ar->arConnected == TRUE &&
+    if(ar->arConnected == true &&
        ar->arSsidLen == sme->ssid_len &&
-       !A_MEMCMP(ar->arSsid, sme->ssid, ar->arSsidLen)) {
-        reconnect_flag = TRUE;
+       !memcmp(ar->arSsid, sme->ssid, ar->arSsidLen)) {
+        reconnect_flag = true;
         status = wmi_reconnect_cmd(ar->arWmi,
                                    ar->arReqBssid,
                                    ar->arChannelHint);
 
         up(&ar->arSem);
-        if (status != A_OK) {
+        if (status) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: wmi_reconnect_cmd failed\n", __func__));
             return -EIO;
         }
         return 0;
     } else if(ar->arSsidLen == sme->ssid_len &&
-              !A_MEMCMP(ar->arSsid, sme->ssid, ar->arSsidLen)) {
+              !memcmp(ar->arSsid, sme->ssid, ar->arSsidLen)) {
 	    ar6000_disconnect(ar);
     }
 
     A_MEMZERO(ar->arSsid, sizeof(ar->arSsid));
     ar->arSsidLen = sme->ssid_len;
-    A_MEMCPY(ar->arSsid, sme->ssid, sme->ssid_len);
+    memcpy(ar->arSsid, sme->ssid, sme->ssid_len);
 
     if(sme->channel){
         ar->arChannelHint = sme->channel->center_freq;
@@ -329,8 +332,8 @@ ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
 
     A_MEMZERO(ar->arReqBssid, sizeof(ar->arReqBssid));
     if(sme->bssid){
-        if(A_MEMCMP(&sme->bssid, bcast_mac, AR6000_ETH_ADDR_LEN)) {
-            A_MEMCPY(ar->arReqBssid, sme->bssid, sizeof(ar->arReqBssid));
+        if(memcmp(&sme->bssid, bcast_mac, AR6000_ETH_ADDR_LEN)) {
+            memcpy(ar->arReqBssid, sme->bssid, sizeof(ar->arReqBssid));
         }
     }
 
@@ -362,7 +365,7 @@ ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
 
         key = &ar->keys[sme->key_idx];
         key->key_len = sme->key_len;
-        A_MEMCPY(key->key, sme->key, key->key_len);
+        memcpy(key->key, sme->key, key->key_len);
         key->cipher = ar->arPairwiseCrypto;
         ar->arDefTxKeyIndex = sme->key_idx;
 
@@ -376,7 +379,7 @@ ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
     }
 
     if (!ar->arUserBssFilter) {
-        if (wmi_bssfilter_cmd(ar->arWmi, ALL_BSS_FILTER, 0) != A_OK) {
+        if (wmi_bssfilter_cmd(ar->arWmi, ALL_BSS_FILTER, 0) != 0) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Couldn't set bss filtering\n", __func__));
             up(&ar->arSem);
             return -EIO;
@@ -408,7 +411,7 @@ ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
         ar->arSsidLen = 0;
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Invalid request\n", __func__));
         return -ENOENT;
-    } else if (status != A_OK) {
+    } else if (status) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: wmi_connect_cmd failed\n", __func__));
         return -EIO;
     }
@@ -420,37 +423,37 @@ ar6k_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
     }
 
     ar->arConnectCtrlFlags &= ~CONNECT_DO_WPA_OFFLOAD;
-    ar->arConnectPending = TRUE;
+    ar->arConnectPending = true;
 
     return 0;
 }
 
 void
-ar6k_cfg80211_connect_event(AR_SOFTC_T *ar, A_UINT16 channel,
-                A_UINT8 *bssid, A_UINT16 listenInterval,
-                A_UINT16 beaconInterval,NETWORK_TYPE networkType,
-                A_UINT8 beaconIeLen, A_UINT8 assocReqLen,
-                A_UINT8 assocRespLen, A_UINT8 *assocInfo)
+ar6k_cfg80211_connect_event(struct ar6_softc *ar, u16 channel,
+                u8 *bssid, u16 listenInterval,
+                u16 beaconInterval,NETWORK_TYPE networkType,
+                u8 beaconIeLen, u8 assocReqLen,
+                u8 assocRespLen, u8 *assocInfo)
 {
-    A_UINT16 size = 0;
-    A_UINT16 capability = 0;
+    u16 size = 0;
+    u16 capability = 0;
     struct cfg80211_bss *bss = NULL;
     struct ieee80211_mgmt *mgmt = NULL;
     struct ieee80211_channel *ibss_channel = NULL;
     s32 signal = 50 * 100;
-    A_UINT8 ie_buf_len = 0;
+    u8 ie_buf_len = 0;
     unsigned char ie_buf[256];
     unsigned char *ptr_ie_buf = ie_buf;
     unsigned char *ieeemgmtbuf = NULL;
-    A_UINT8 source_mac[ATH_MAC_LEN];
+    u8 source_mac[ATH_MAC_LEN];
 
-    A_UINT8 assocReqIeOffset = sizeof(A_UINT16)  +  /* capinfo*/
-                               sizeof(A_UINT16);    /* listen interval */
-    A_UINT8 assocRespIeOffset = sizeof(A_UINT16) +  /* capinfo*/
-                                sizeof(A_UINT16) +  /* status Code */
-                                sizeof(A_UINT16);   /* associd */
-    A_UINT8 *assocReqIe = assocInfo + beaconIeLen + assocReqIeOffset;
-    A_UINT8 *assocRespIe = assocInfo + beaconIeLen + assocReqLen + assocRespIeOffset;
+    u8 assocReqIeOffset = sizeof(u16)  +  /* capinfo*/
+                               sizeof(u16);    /* listen interval */
+    u8 assocRespIeOffset = sizeof(u16) +  /* capinfo*/
+                                sizeof(u16) +  /* status Code */
+                                sizeof(u16);   /* associd */
+    u8 *assocReqIe = assocInfo + beaconIeLen + assocReqIeOffset;
+    u8 *assocRespIe = assocInfo + beaconIeLen + assocReqLen + assocRespIeOffset;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: \n", __func__));
 
@@ -484,85 +487,92 @@ ar6k_cfg80211_connect_event(AR_SOFTC_T *ar, A_UINT16 channel,
                            ((ADHOC_NETWORK & networkType) ? WLAN_CAPABILITY_IBSS : WLAN_CAPABILITY_ESS),
                            ((ADHOC_NETWORK & networkType) ? WLAN_CAPABILITY_IBSS : WLAN_CAPABILITY_ESS));
 
-    if(!bss) {
-        if (ADHOC_NETWORK & networkType) {
+    /*
+     * Earlier we were updating the cfg about bss by making a beacon frame
+     * only if the entry for bss is not there. This can have some issue if
+     * ROAM event is generated and a heavy traffic is ongoing. The ROAM
+     * event is handled through a work queue and by the time it really gets
+     * handled, BSS would have been aged out. So it is better to update the
+     * cfg about BSS irrespective of its entry being present right now or
+     * not.
+     */
+
+    if (ADHOC_NETWORK & networkType) {
             /* construct 802.11 mgmt beacon */
             if(ptr_ie_buf) {
-                *ptr_ie_buf++ = WLAN_EID_SSID;
-                *ptr_ie_buf++ = ar->arSsidLen;
-                A_MEMCPY(ptr_ie_buf, ar->arSsid, ar->arSsidLen);
-                ptr_ie_buf +=ar->arSsidLen;
+		    *ptr_ie_buf++ = WLAN_EID_SSID;
+		    *ptr_ie_buf++ = ar->arSsidLen;
+		    memcpy(ptr_ie_buf, ar->arSsid, ar->arSsidLen);
+		    ptr_ie_buf +=ar->arSsidLen;
 
-                *ptr_ie_buf++ = WLAN_EID_IBSS_PARAMS;
-                *ptr_ie_buf++ = 2; /* length */
-                *ptr_ie_buf++ = 0; /* ATIM window */
-                *ptr_ie_buf++ = 0; /* ATIM window */
+		    *ptr_ie_buf++ = WLAN_EID_IBSS_PARAMS;
+		    *ptr_ie_buf++ = 2; /* length */
+		    *ptr_ie_buf++ = 0; /* ATIM window */
+		    *ptr_ie_buf++ = 0; /* ATIM window */
 
-                /* TODO: update ibss params and include supported rates,
-                 * DS param set, extened support rates, wmm. */
+		    /* TODO: update ibss params and include supported rates,
+		     * DS param set, extened support rates, wmm. */
 
-                ie_buf_len = ptr_ie_buf - ie_buf;
+		    ie_buf_len = ptr_ie_buf - ie_buf;
             }
 
             capability |= IEEE80211_CAPINFO_IBSS;
             if(WEP_CRYPT == ar->arPairwiseCrypto) {
-                capability |= IEEE80211_CAPINFO_PRIVACY;
+		    capability |= IEEE80211_CAPINFO_PRIVACY;
             }
-            A_MEMCPY(source_mac, ar->arNetDev->dev_addr, ATH_MAC_LEN);
+            memcpy(source_mac, ar->arNetDev->dev_addr, ATH_MAC_LEN);
             ptr_ie_buf = ie_buf;
-        } else {
-            capability = *(A_UINT16 *)(&assocInfo[beaconIeLen]);
-            A_MEMCPY(source_mac, bssid, ATH_MAC_LEN);
+    } else {
+            capability = *(u16 *)(&assocInfo[beaconIeLen]);
+            memcpy(source_mac, bssid, ATH_MAC_LEN);
             ptr_ie_buf = assocReqIe;
             ie_buf_len = assocReqLen;
-        }
+    }
 
-        size = offsetof(struct ieee80211_mgmt, u)
-             + sizeof(mgmt->u.beacon)
-             + ie_buf_len;
+    size = offsetof(struct ieee80211_mgmt, u)
+	    + sizeof(mgmt->u.beacon)
+	    + ie_buf_len;
 
-        ieeemgmtbuf = A_MALLOC_NOWAIT(size);
-        if(!ieeemgmtbuf) {
+    ieeemgmtbuf = A_MALLOC_NOWAIT(size);
+    if(!ieeemgmtbuf) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
                             ("%s: ieeeMgmtbuf alloc error\n", __func__));
+	    cfg80211_put_bss(bss);
             return;
-        }
-
-        A_MEMZERO(ieeemgmtbuf, size);
-        mgmt = (struct ieee80211_mgmt *)ieeemgmtbuf;
-        mgmt->frame_control = (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
-        A_MEMCPY(mgmt->da, bcast_mac, ATH_MAC_LEN);
-        A_MEMCPY(mgmt->sa, source_mac, ATH_MAC_LEN);
-        A_MEMCPY(mgmt->bssid, bssid, ATH_MAC_LEN);
-        mgmt->u.beacon.beacon_int = beaconInterval;
-        mgmt->u.beacon.capab_info = capability;
-        A_MEMCPY(mgmt->u.beacon.variable, ptr_ie_buf, ie_buf_len);
-
-        ibss_channel = ieee80211_get_channel(ar->wdev->wiphy, (int)channel);
-
-        AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
-                        ("%s: inform bss with bssid %02x:%02x:%02x:%02x:%02x:%02x "\
-                         "channel %d beaconInterval %d capability 0x%x\n",
-                        __func__,
-                        mgmt->bssid[0], mgmt->bssid[1], mgmt->bssid[2],
-                        mgmt->bssid[3], mgmt->bssid[4], mgmt->bssid[5],
-                        ibss_channel->hw_value, beaconInterval, capability));
-
-        bss = cfg80211_inform_bss_frame(ar->wdev->wiphy,
-                                        ibss_channel, mgmt,
-                                        le16_to_cpu(size),
-                                        signal, GFP_KERNEL);
-        A_FREE(ieeemgmtbuf);
-        cfg80211_put_bss(bss);
     }
+
+    A_MEMZERO(ieeemgmtbuf, size);
+    mgmt = (struct ieee80211_mgmt *)ieeemgmtbuf;
+    mgmt->frame_control = (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON);
+    memcpy(mgmt->da, bcast_mac, ATH_MAC_LEN);
+    memcpy(mgmt->sa, source_mac, ATH_MAC_LEN);
+    memcpy(mgmt->bssid, bssid, ATH_MAC_LEN);
+    mgmt->u.beacon.beacon_int = beaconInterval;
+    mgmt->u.beacon.capab_info = capability;
+    memcpy(mgmt->u.beacon.variable, ptr_ie_buf, ie_buf_len);
+
+    ibss_channel = ieee80211_get_channel(ar->wdev->wiphy, (int)channel);
+
+    AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
+		    ("%s: inform bss with bssid %pM channel %d beaconInterval %d "
+		     "capability 0x%x\n", __func__, mgmt->bssid,
+		     ibss_channel->hw_value, beaconInterval, capability));
+
+    bss = cfg80211_inform_bss_frame(ar->wdev->wiphy,
+				    ibss_channel, mgmt,
+				    le16_to_cpu(size),
+				    signal, GFP_KERNEL);
+    kfree(ieeemgmtbuf);
+    cfg80211_put_bss(bss);
 
     if((ADHOC_NETWORK & networkType)) {
         cfg80211_ibss_joined(ar->arNetDev, bssid, GFP_KERNEL);
         return;
     }
 
-    if (FALSE == ar->arConnected) {
+    if (false == ar->arConnected) {
         /* inform connect result to cfg80211 */
+        ar->smeState = SME_DISCONNECTED;
         cfg80211_connect_result(ar->arNetDev, bssid,
                                 assocReqIe, assocReqLen,
                                 assocRespIe, assocRespLen,
@@ -578,13 +588,13 @@ ar6k_cfg80211_connect_event(AR_SOFTC_T *ar, A_UINT16 channel,
 
 static int
 ar6k_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
-                        A_UINT16 reason_code)
+                        u16 reason_code)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(dev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(dev);
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: reason=%u\n", __func__, reason_code));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -609,7 +619,7 @@ ar6k_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
     A_MEMZERO(ar->arSsid, sizeof(ar->arSsid));
     ar->arSsidLen = 0;
 
-    if (ar->arSkipScan == FALSE) {
+    if (ar->arSkipScan == false) {
         A_MEMZERO(ar->arReqBssid, sizeof(ar->arReqBssid));
     }
 
@@ -619,13 +629,17 @@ ar6k_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
 }
 
 void
-ar6k_cfg80211_disconnect_event(AR_SOFTC_T *ar, A_UINT8 reason,
-                               A_UINT8 *bssid, A_UINT8 assocRespLen,
-                               A_UINT8 *assocInfo, A_UINT16 protocolReasonStatus)
+ar6k_cfg80211_disconnect_event(struct ar6_softc *ar, u8 reason,
+                               u8 *bssid, u8 assocRespLen,
+                               u8 *assocInfo, u16 protocolReasonStatus)
 {
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: reason=%u\n", __func__, reason));
 
+    if (ar->scan_request) {
+	cfg80211_scan_done(ar->scan_request, true);
+        ar->scan_request = NULL;
+    }
     if((ADHOC_NETWORK & ar->arNetworkType)) {
         if(NL80211_IFTYPE_ADHOC != ar->wdev->iftype) {
             AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
@@ -645,18 +659,28 @@ ar6k_cfg80211_disconnect_event(AR_SOFTC_T *ar, A_UINT8 reason,
         }
     }
 
-    if(FALSE == ar->arConnected) {
+    if(true == ar->arConnectPending) {
         if(NO_NETWORK_AVAIL == reason) {
             /* connect cmd failed */
-            cfg80211_connect_result(ar->arNetDev, bssid,
-                                    NULL, 0,
-                                    NULL, 0,
-                                    WLAN_STATUS_UNSPECIFIED_FAILURE,
-                                    GFP_KERNEL);
+            wmi_disconnect_cmd(ar->arWmi);
+        } else if (reason == DISCONNECT_CMD) {
+            /* connection loss due to disconnect cmd or low rssi */
+            ar->arConnectPending = false;   
+            if (ar->smeState == SME_CONNECTING) {
+                cfg80211_connect_result(ar->arNetDev, bssid,
+                                        NULL, 0,
+                                        NULL, 0,
+                                        WLAN_STATUS_UNSPECIFIED_FAILURE,
+                                        GFP_KERNEL);
+            } else {
+                cfg80211_disconnected(ar->arNetDev, reason, NULL, 0, GFP_KERNEL);
+            }
+            ar->smeState = SME_DISCONNECTED;
         }
     } else {
-        /* connection loss due to disconnect cmd or low rssi */
-        cfg80211_disconnected(ar->arNetDev, reason, NULL, 0, GFP_KERNEL);
+        if (reason != DISCONNECT_CMD) {
+            wmi_disconnect_cmd(ar->arWmi);
+        }
     }
 }
 
@@ -664,7 +688,7 @@ void
 ar6k_cfg80211_scan_node(void *arg, bss_t *ni)
 {
     struct wiphy *wiphy = (struct wiphy *)arg;
-    A_UINT16 size;
+    u16 size;
     unsigned char *ieeemgmtbuf = NULL;
     struct ieee80211_mgmt *mgmt;
     struct ieee80211_channel *channel;
@@ -701,22 +725,19 @@ ar6k_cfg80211_scan_node(void *arg, bss_t *ni)
        cfg80211 needs it, for time being just filling the da, sa and bssid fields alone.
     */
     mgmt = (struct ieee80211_mgmt *)ieeemgmtbuf;
-    A_MEMCPY(mgmt->da, bcast_mac, ATH_MAC_LEN);
-    A_MEMCPY(mgmt->sa, ni->ni_macaddr, ATH_MAC_LEN);
-    A_MEMCPY(mgmt->bssid, ni->ni_macaddr, ATH_MAC_LEN);
-    A_MEMCPY(ieeemgmtbuf + offsetof(struct ieee80211_mgmt, u),
+    memcpy(mgmt->da, bcast_mac, ATH_MAC_LEN);
+    memcpy(mgmt->sa, ni->ni_macaddr, ATH_MAC_LEN);
+    memcpy(mgmt->bssid, ni->ni_macaddr, ATH_MAC_LEN);
+    memcpy(ieeemgmtbuf + offsetof(struct ieee80211_mgmt, u),
              ni->ni_buf, ni->ni_framelen);
 
     freq    = cie->ie_chan;
     channel = ieee80211_get_channel(wiphy, freq);
     signal  = ni->ni_snr * 100;
 
-    AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
-                    ("%s: bssid %02x:%02x:%02x:%02x:%02x:%02x channel %d freq %d size %d\n",
-                   __func__,
-                   mgmt->bssid[0], mgmt->bssid[1], mgmt->bssid[2],
-                   mgmt->bssid[3], mgmt->bssid[4], mgmt->bssid[5],
-                   channel->hw_value, freq, size));
+	AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
+		("%s: bssid %pM channel %d freq %d size %d\n", __func__,
+			mgmt->bssid, channel->hw_value, freq, size));
     cfg80211_inform_bss_frame(wiphy, channel, mgmt,
                               le16_to_cpu(size),
                               signal, GFP_KERNEL);
@@ -728,13 +749,13 @@ static int
 ar6k_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
                    struct cfg80211_scan_request *request)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(ndev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(ndev);
     int ret = 0;
-    A_BOOL forceFgScan = FALSE;
+    u32 forceFgScan = 0;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: \n", __func__));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -747,7 +768,7 @@ ar6k_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
     if (!ar->arUserBssFilter) {
         if (wmi_bssfilter_cmd(ar->arWmi,
                              (ar->arConnected ? ALL_BUT_BSS_FILTER : ALL_BSS_FILTER),
-                             0) != A_OK) {
+                             0) != 0) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Couldn't set bss filtering\n", __func__));
             return -EIO;
         }
@@ -755,25 +776,25 @@ ar6k_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
 
     if(request->n_ssids &&
        request->ssids[0].ssid_len) {
-        A_UINT8 i;
+        u8 i;
 
-        if(request->n_ssids > MAX_PROBED_SSID_INDEX) {
-            request->n_ssids = MAX_PROBED_SSID_INDEX;
+        if(request->n_ssids > (MAX_PROBED_SSID_INDEX - 1)) {
+            request->n_ssids = MAX_PROBED_SSID_INDEX - 1;
         }
 
         for (i = 0; i < request->n_ssids; i++) {
-            wmi_probedSsid_cmd(ar->arWmi, i, SPECIFIC_SSID_FLAG,
+            wmi_probedSsid_cmd(ar->arWmi, i+1, SPECIFIC_SSID_FLAG,
                                request->ssids[i].ssid_len,
                                request->ssids[i].ssid);
         }
     }
 
     if(ar->arConnected) {
-        forceFgScan = TRUE;
+        forceFgScan = 1;
     }
 
-    if(wmi_startscan_cmd(ar->arWmi, WMI_LONG_SCAN, forceFgScan, FALSE, \
-                         0, 0, 0, NULL) != A_OK) {
+    if(wmi_startscan_cmd(ar->arWmi, WMI_LONG_SCAN, forceFgScan, false, \
+                         0, 0, 0, NULL) != 0) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: wmi_startscan_cmd failed\n", __func__));
         ret = -EIO;
     }
@@ -784,46 +805,52 @@ ar6k_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
 }
 
 void
-ar6k_cfg80211_scanComplete_event(AR_SOFTC_T *ar, A_STATUS status)
+ar6k_cfg80211_scanComplete_event(struct ar6_softc *ar, int status)
 {
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: status %d\n", __func__, status));
 
-    if(ar->scan_request)
-    {
-        /* Translate data to cfg80211 mgmt format */
-        wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
+    if (!ar->scan_request)
+	    return;
 
-        cfg80211_scan_done(ar->scan_request,
-                          (status & A_ECANCELED) ? true : false);
+    if ((status == A_ECANCELED) || (status == A_EBUSY)) {
+	    cfg80211_scan_done(ar->scan_request, true);
+	    goto out;
+    }
 
-        if(ar->scan_request->n_ssids &&
-           ar->scan_request->ssids[0].ssid_len) {
-            A_UINT8 i;
+    /* Translate data to cfg80211 mgmt format */
+    wmi_iterate_nodes(ar->arWmi, ar6k_cfg80211_scan_node, ar->wdev->wiphy);
+
+    cfg80211_scan_done(ar->scan_request, false);
+
+    if(ar->scan_request->n_ssids &&
+       ar->scan_request->ssids[0].ssid_len) {
+            u8 i;
 
             for (i = 0; i < ar->scan_request->n_ssids; i++) {
-                wmi_probedSsid_cmd(ar->arWmi, i, DISABLE_SSID_FLAG,
-                                   0, NULL);
+		    wmi_probedSsid_cmd(ar->arWmi, i+1, DISABLE_SSID_FLAG,
+				       0, NULL);
             }
-        }
-        ar->scan_request = NULL;
     }
+
+out:
+    ar->scan_request = NULL;
 }
 
 static int
 ar6k_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
-                      A_UINT8 key_index, const A_UINT8 *mac_addr,
+                      u8 key_index, bool pairwise, const u8 *mac_addr,
                       struct key_params *params)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(ndev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(ndev);
     struct ar_key *key = NULL;
-    A_UINT8 key_usage;
-    A_UINT8 key_type;
-    A_STATUS status = 0;
+    u8 key_usage;
+    u8 key_type;
+    int status = 0;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s:\n", __func__));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -854,9 +881,9 @@ ar6k_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
             return -EINVAL;
 
         key->key_len = params->key_len;
-        A_MEMCPY(key->key, params->key, key->key_len);
+        memcpy(key->key, params->key, key->key_len);
         key->seq_len = params->seq_len;
-        A_MEMCPY(key->seq, params->seq, key->seq_len);
+        memcpy(key->seq, params->seq, key->seq_len);
         key->cipher = params->cipher;
     }
 
@@ -893,10 +920,10 @@ ar6k_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
     ar->arDefTxKeyIndex = key_index;
     status = wmi_addKey_cmd(ar->arWmi, ar->arDefTxKeyIndex, key_type, key_usage,
                     key->key_len, key->seq, key->key, KEY_OP_INIT_VAL,
-                    (A_UINT8*)mac_addr, SYNC_BOTH_WMIFLAG);
+                    (u8 *)mac_addr, SYNC_BOTH_WMIFLAG);
 
 
-    if(status != A_OK) {
+    if (status) {
         return -EIO;
     }
 
@@ -905,13 +932,13 @@ ar6k_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
 
 static int
 ar6k_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
-                      A_UINT8 key_index, const A_UINT8 *mac_addr)
+                      u8 key_index, bool pairwise, const u8 *mac_addr)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(ndev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(ndev);
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: index %d\n", __func__, key_index));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -940,16 +967,17 @@ ar6k_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
 
 static int
 ar6k_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
-                      A_UINT8 key_index, const A_UINT8 *mac_addr, void *cookie,
+                      u8 key_index, bool pairwise, const u8 *mac_addr,
+                      void *cookie,
                       void (*callback)(void *cookie, struct key_params*))
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(ndev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(ndev);
     struct ar_key *key = NULL;
     struct key_params params;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: index %d\n", __func__, key_index));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -981,15 +1009,16 @@ ar6k_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
 
 static int
 ar6k_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *ndev,
-                              A_UINT8 key_index)
+                              u8 key_index, bool unicast, bool multicast)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(ndev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(ndev);
     struct ar_key *key = NULL;
-    A_STATUS status = A_OK;
+    int status = 0;
+    u8 key_usage;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: index %d\n", __func__, key_index));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1014,11 +1043,16 @@ ar6k_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *ndev,
 
     ar->arDefTxKeyIndex = key_index;
     key = &ar->keys[ar->arDefTxKeyIndex];
+    key_usage = GROUP_USAGE;
+    if (WEP_CRYPT == ar->arPairwiseCrypto) {
+        key_usage |= TX_USAGE;
+    }
+
     status = wmi_addKey_cmd(ar->arWmi, ar->arDefTxKeyIndex,
-                            ar->arPairwiseCrypto, GROUP_USAGE | TX_USAGE,
+                            ar->arPairwiseCrypto, key_usage,
                             key->key_len, key->seq, key->key, KEY_OP_INIT_VAL,
                             NULL, SYNC_BOTH_WMIFLAG);
-    if (status != A_OK) {
+    if (status) {
         return -EIO;
     }
 
@@ -1027,13 +1061,13 @@ ar6k_cfg80211_set_default_key(struct wiphy *wiphy, struct net_device *ndev,
 
 static int
 ar6k_cfg80211_set_default_mgmt_key(struct wiphy *wiphy, struct net_device *ndev,
-                                   A_UINT8 key_index)
+                                   u8 key_index)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(ndev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(ndev);
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: index %d\n", __func__, key_index));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1048,7 +1082,7 @@ ar6k_cfg80211_set_default_mgmt_key(struct wiphy *wiphy, struct net_device *ndev,
 }
 
 void
-ar6k_cfg80211_tkip_micerr_event(AR_SOFTC_T *ar, A_UINT8 keyid, A_BOOL ismcast)
+ar6k_cfg80211_tkip_micerr_event(struct ar6_softc *ar, u8 keyid, bool ismcast)
 {
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO,
                     ("%s: keyid %d, ismcast %d\n", __func__, keyid, ismcast));
@@ -1059,13 +1093,13 @@ ar6k_cfg80211_tkip_micerr_event(AR_SOFTC_T *ar, A_UINT8 keyid, A_BOOL ismcast)
 }
 
 static int
-ar6k_cfg80211_set_wiphy_params(struct wiphy *wiphy, A_UINT32 changed)
+ar6k_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)wiphy_priv(wiphy);
+    struct ar6_softc *ar = (struct ar6_softc *)wiphy_priv(wiphy);
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: changed 0x%x\n", __func__, changed));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1076,7 +1110,7 @@ ar6k_cfg80211_set_wiphy_params(struct wiphy *wiphy, A_UINT32 changed)
     }
 
     if (changed & WIPHY_PARAM_RTS_THRESHOLD) {
-        if (wmi_set_rts_cmd(ar->arWmi,wiphy->rts_threshold) != A_OK){
+        if (wmi_set_rts_cmd(ar->arWmi,wiphy->rts_threshold) != 0){
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: wmi_set_rts_cmd failed\n", __func__));
             return -EIO;
         }
@@ -1087,52 +1121,23 @@ ar6k_cfg80211_set_wiphy_params(struct wiphy *wiphy, A_UINT32 changed)
 
 static int
 ar6k_cfg80211_set_bitrate_mask(struct wiphy *wiphy, struct net_device *dev,
-                               const A_UINT8 *peer,
+                               const u8 *peer,
                                const struct cfg80211_bitrate_mask *mask)
 {
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,34)
-    AR_SOFTC_T *ar = ar6k_priv(dev);
-    A_STATUS status;
-
-    AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: mask 0x%x\n", __func__, mask->fixed));
-
-    if(ar->arWmiReady == FALSE) {
-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
-        return -EIO;
-    }
-
-    if(ar->arWlanState == WLAN_DISABLED) {
-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wlan disabled\n", __func__));
-        return -EIO;
-    }
-
-    status = wmi_set_fixrates_cmd(ar->arWmi, mask->fixed);
-
-    if(status == A_EINVAL) {
-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: invalid params\n", __func__));
-        return -EINVAL;
-    } else if(status != A_OK) {
-        AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: wmi_set_fixrates_cmd failed\n", __func__));
-        return -EIO;
-    }
-
-    return 0;
-#else
     AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("Setting rates: Not supported\n"));
     return -EIO;
-#endif
 }
 
 /* The type nl80211_tx_power_setting replaces the following data type from 2.6.36 onwards */
 static int
 ar6k_cfg80211_set_txpower(struct wiphy *wiphy, enum tx_power_setting type, int dbm)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)wiphy_priv(wiphy);
-    A_UINT8 ar_dbm;
+    struct ar6_softc *ar = (struct ar6_softc *)wiphy_priv(wiphy);
+    u8 ar_dbm;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: type 0x%x, dbm %d\n", __func__, type, dbm));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1142,13 +1147,13 @@ ar6k_cfg80211_set_txpower(struct wiphy *wiphy, enum tx_power_setting type, int d
         return -EIO;
     }
 
-    ar->arTxPwrSet = FALSE;
+    ar->arTxPwrSet = false;
     switch(type) {
     case TX_POWER_AUTOMATIC:
         return 0;
     case TX_POWER_LIMITED:
         ar->arTxPwr = ar_dbm = dbm;
-        ar->arTxPwrSet = TRUE;
+        ar->arTxPwrSet = true;
         break;
     default:
         AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: type 0x%x not supported\n", __func__, type));
@@ -1163,11 +1168,11 @@ ar6k_cfg80211_set_txpower(struct wiphy *wiphy, enum tx_power_setting type, int d
 static int
 ar6k_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)wiphy_priv(wiphy);
+    struct ar6_softc *ar = (struct ar6_softc *)wiphy_priv(wiphy);
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: \n", __func__));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1177,10 +1182,10 @@ ar6k_cfg80211_get_txpower(struct wiphy *wiphy, int *dbm)
         return -EIO;
     }
 
-    if((ar->arConnected == TRUE)) {
+    if((ar->arConnected == true)) {
         ar->arTxPwr = 0;
 
-        if(wmi_get_txPwr_cmd(ar->arWmi) != A_OK) {
+        if(wmi_get_txPwr_cmd(ar->arWmi) != 0) {
             AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: wmi_get_txPwr_cmd failed\n", __func__));
             return -EIO;
         }
@@ -1202,12 +1207,12 @@ ar6k_cfg80211_set_power_mgmt(struct wiphy *wiphy,
                              struct net_device *dev,
                              bool pmgmt, int timeout)
 {
-    AR_SOFTC_T *ar = ar6k_priv(dev);
+    struct ar6_softc *ar = ar6k_priv(dev);
     WMI_POWER_MODE_CMD pwrMode;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: pmgmt %d, timeout %d\n", __func__, pmgmt, timeout));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1219,13 +1224,13 @@ ar6k_cfg80211_set_power_mgmt(struct wiphy *wiphy,
 
     if(pmgmt) {
         AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: Max Perf\n", __func__));
-        pwrMode.powerMode = MAX_PERF_POWER;
+        pwrMode.powerMode = REC_POWER;
     } else {
         AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: Rec Power\n", __func__));
-        pwrMode.powerMode = REC_POWER;
+        pwrMode.powerMode = MAX_PERF_POWER;
     }
 
-    if(wmi_powermode_cmd(ar->arWmi, pwrMode.powerMode) != A_OK) {
+    if(wmi_powermode_cmd(ar->arWmi, pwrMode.powerMode) != 0) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: wmi_powermode_cmd failed\n", __func__));
         return -EIO;
     }
@@ -1233,7 +1238,7 @@ ar6k_cfg80211_set_power_mgmt(struct wiphy *wiphy,
     return 0;
 }
 
-static int
+static struct net_device *
 ar6k_cfg80211_add_virtual_intf(struct wiphy *wiphy, char *name,
             				    enum nl80211_iftype type, u32 *flags,
             				    struct vif_params *params)
@@ -1244,7 +1249,7 @@ ar6k_cfg80211_add_virtual_intf(struct wiphy *wiphy, char *name,
     /* Multiple virtual interface is not supported.
      * The default interface supports STA and IBSS type
      */
-    return -EOPNOTSUPP;
+    return ERR_PTR(-EOPNOTSUPP);
 }
 
 static int
@@ -1264,12 +1269,12 @@ ar6k_cfg80211_change_iface(struct wiphy *wiphy, struct net_device *ndev,
                            enum nl80211_iftype type, u32 *flags,
                            struct vif_params *params)
 {
-    AR_SOFTC_T *ar = ar6k_priv(ndev);
+    struct ar6_softc *ar = ar6k_priv(ndev);
     struct wireless_dev *wdev = ar->wdev;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: type %u\n", __func__, type));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1300,12 +1305,12 @@ static int
 ar6k_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
                         struct cfg80211_ibss_params *ibss_param)
 {
-    AR_SOFTC_T *ar = ar6k_priv(dev);
-    A_STATUS status;
+    struct ar6_softc *ar = ar6k_priv(dev);
+    int status;
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: \n", __func__));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1321,7 +1326,7 @@ ar6k_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
     }
 
     ar->arSsidLen = ibss_param->ssid_len;
-    A_MEMCPY(ar->arSsid, ibss_param->ssid, ar->arSsidLen);
+    memcpy(ar->arSsid, ibss_param->ssid, ar->arSsidLen);
 
     if(ibss_param->channel) {
         ar->arChannelHint = ibss_param->channel->center_freq;
@@ -1335,8 +1340,8 @@ ar6k_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
 
     A_MEMZERO(ar->arReqBssid, sizeof(ar->arReqBssid));
     if(ibss_param->bssid) {
-        if(A_MEMCMP(&ibss_param->bssid, bcast_mac, AR6000_ETH_ADDR_LEN)) {
-            A_MEMCPY(ar->arReqBssid, ibss_param->bssid, sizeof(ar->arReqBssid));
+        if(memcmp(&ibss_param->bssid, bcast_mac, AR6000_ETH_ADDR_LEN)) {
+            memcpy(ar->arReqBssid, ibss_param->bssid, sizeof(ar->arReqBssid));
         }
     }
 
@@ -1367,7 +1372,7 @@ ar6k_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
                             ar->arSsidLen, ar->arSsid,
                             ar->arReqBssid, ar->arChannelHint,
                             ar->arConnectCtrlFlags);
-    ar->arConnectPending = TRUE;
+    ar->arConnectPending = true;
 
     return 0;
 }
@@ -1375,11 +1380,11 @@ ar6k_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
 static int
 ar6k_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
 {
-    AR_SOFTC_T *ar = (AR_SOFTC_T *)ar6k_priv(dev);
+    struct ar6_softc *ar = (struct ar6_softc *)ar6k_priv(dev);
 
     AR_DEBUG_PRINTF(ATH_DEBUG_INFO, ("%s: \n", __func__));
 
-    if(ar->arWmiReady == FALSE) {
+    if(ar->arWmiReady == false) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR, ("%s: Wmi not ready\n", __func__));
         return -EIO;
     }
@@ -1398,7 +1403,7 @@ ar6k_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
 
 
 static const
-A_UINT32 cipher_suites[] = {
+u32 cipher_suites[] = {
     WLAN_CIPHER_SUITE_WEP40,
     WLAN_CIPHER_SUITE_WEP104,
     WLAN_CIPHER_SUITE_TKIP,
@@ -1443,7 +1448,7 @@ ar6k_cfg80211_init(struct device *dev)
     }
 
     /* create a new wiphy for use with cfg80211 */
-    wdev->wiphy = wiphy_new(&ar6k_cfg80211_ops, sizeof(AR_SOFTC_T));
+    wdev->wiphy = wiphy_new(&ar6k_cfg80211_ops, sizeof(struct ar6_softc));
     if(!wdev->wiphy) {
         AR_DEBUG_PRINTF(ATH_DEBUG_ERR,
                         ("%s: Couldn't allocate wiphy device\n", __func__));
@@ -1477,7 +1482,7 @@ ar6k_cfg80211_init(struct device *dev)
 }
 
 void
-ar6k_cfg80211_deinit(AR_SOFTC_T *ar)
+ar6k_cfg80211_deinit(struct ar6_softc *ar)
 {
     struct wireless_dev *wdev = ar->wdev;
 

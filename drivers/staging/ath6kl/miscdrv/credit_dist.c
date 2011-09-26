@@ -1,21 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="credit_dist.c" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="credit_dist.c" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 
 #include "a_config.h"
 #include "athdefs.h"
@@ -37,15 +41,15 @@
 #define DATA_SVCS_USED 4
 #endif
 
-static void RedistributeCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-                                HTC_ENDPOINT_CREDIT_DIST *pEPDistList);
+static void RedistributeCredits(struct common_credit_state_info *pCredInfo,
+                                struct htc_endpoint_credit_dist *pEPDistList);
 
-static void SeekCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-                        HTC_ENDPOINT_CREDIT_DIST *pEPDistList);
+static void SeekCredits(struct common_credit_state_info *pCredInfo,
+                        struct htc_endpoint_credit_dist *pEPDistList);
 
 /* reduce an ep's credits back to a set limit */
-static INLINE void ReduceCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-                                HTC_ENDPOINT_CREDIT_DIST  *pEpDist,
+static INLINE void ReduceCredits(struct common_credit_state_info *pCredInfo,
+                                struct htc_endpoint_credit_dist  *pEpDist,
                                 int                       Limit)
 {
     int credits;
@@ -77,12 +81,12 @@ static INLINE void ReduceCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
  * This function is called in the context of HTCStart() to setup initial (application-specific)
  * credit distributions */
 static void ar6000_credit_init(void                     *Context,
-                               HTC_ENDPOINT_CREDIT_DIST *pEPList,
+                               struct htc_endpoint_credit_dist *pEPList,
                                int                      TotalCredits)
 {
-    HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
+    struct htc_endpoint_credit_dist *pCurEpDist;
     int                      count;
-    COMMON_CREDIT_STATE_INFO *pCredInfo = (COMMON_CREDIT_STATE_INFO *)Context;
+    struct common_credit_state_info *pCredInfo = (struct common_credit_state_info *)Context;
 
     pCredInfo->CurrentFreeCredits = TotalCredits;
     pCredInfo->TotalAvailableCredits = TotalCredits;
@@ -132,7 +136,7 @@ static void ar6000_credit_init(void                     *Context,
 
     if (pCredInfo->CurrentFreeCredits <= 0) {
         AR_DEBUG_PRINTF(ATH_LOG_INF, ("Not enough credits (%d) to do credit distributions \n", TotalCredits));
-        A_ASSERT(FALSE);
+        A_ASSERT(false);
         return;
     }
 
@@ -171,11 +175,11 @@ static void ar6000_credit_init(void                     *Context,
  *
  */
 static void ar6000_credit_distribute(void                     *Context,
-                                     HTC_ENDPOINT_CREDIT_DIST *pEPDistList,
+                                     struct htc_endpoint_credit_dist *pEPDistList,
                                      HTC_CREDIT_DIST_REASON   Reason)
 {
-    HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
-    COMMON_CREDIT_STATE_INFO *pCredInfo = (COMMON_CREDIT_STATE_INFO *)Context;
+    struct htc_endpoint_credit_dist *pCurEpDist;
+    struct common_credit_state_info *pCredInfo = (struct common_credit_state_info *)Context;
 
     switch (Reason) {
         case HTC_CREDIT_DIST_SEND_COMPLETE :
@@ -239,10 +243,10 @@ static void ar6000_credit_distribute(void                     *Context,
 }
 
 /* redistribute credits based on activity change */
-static void RedistributeCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-                                HTC_ENDPOINT_CREDIT_DIST *pEPDistList)
+static void RedistributeCredits(struct common_credit_state_info *pCredInfo,
+                                struct htc_endpoint_credit_dist *pEPDistList)
 {
-    HTC_ENDPOINT_CREDIT_DIST *pCurEpDist = pEPDistList;
+    struct htc_endpoint_credit_dist *pCurEpDist = pEPDistList;
 
         /* walk through the list and remove credits from inactive endpoints */
     while (pCurEpDist != NULL) {
@@ -279,10 +283,10 @@ static void RedistributeCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
 }
 
 /* HTC has an endpoint that needs credits, pEPDist is the endpoint in question */
-static void SeekCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
-                        HTC_ENDPOINT_CREDIT_DIST *pEPDist)
+static void SeekCredits(struct common_credit_state_info *pCredInfo,
+                        struct htc_endpoint_credit_dist *pEPDist)
 {
-    HTC_ENDPOINT_CREDIT_DIST *pCurEpDist;
+    struct htc_endpoint_credit_dist *pCurEpDist;
     int                      credits = 0;
     int                      need;
 
@@ -378,7 +382,7 @@ static void SeekCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
             /* return what we can get */
         credits = min(pCredInfo->CurrentFreeCredits,pEPDist->TxCreditsSeek);
 
-    } while (FALSE);
+    } while (false);
 
         /* did we find some credits? */
     if (credits) {
@@ -389,11 +393,11 @@ static void SeekCredits(COMMON_CREDIT_STATE_INFO *pCredInfo,
 }
 
 /* initialize and setup credit distribution */
-A_STATUS ar6000_setup_credit_dist(HTC_HANDLE HTCHandle, COMMON_CREDIT_STATE_INFO *pCredInfo)
+int ar6000_setup_credit_dist(HTC_HANDLE HTCHandle, struct common_credit_state_info *pCredInfo)
 {
     HTC_SERVICE_ID servicepriority[5];
 
-    A_MEMZERO(pCredInfo,sizeof(COMMON_CREDIT_STATE_INFO));
+    A_MEMZERO(pCredInfo,sizeof(struct common_credit_state_info));
 
     servicepriority[0] = WMI_CONTROL_SVC;  /* highest */
     servicepriority[1] = WMI_DATA_VO_SVC;
@@ -409,6 +413,6 @@ A_STATUS ar6000_setup_credit_dist(HTC_HANDLE HTCHandle, COMMON_CREDIT_STATE_INFO
                              servicepriority,
                              5);
 
-    return A_OK;
+    return 0;
 }
 

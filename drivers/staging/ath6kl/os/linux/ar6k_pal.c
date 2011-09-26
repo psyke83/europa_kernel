@@ -1,27 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="ar6k_pal.c" company="Atheros"> */
-/*    Copyright (c) 2009 Atheros Corporation.  All rights reserved. */
-/*  */
-/* The software source and binaries included in this development package are */
-/* licensed, not sold. You, or your company, received the package under one */
-/* or more license agreements. The rights granted to you are specifically */
-/* listed in these license agreement(s). All other rights remain with Atheros */
-/* Communications, Inc., its subsidiaries, or the respective owner including */
-/* those listed on the included copyright notices.  Distribution of any */
-/* portion of this package must be in strict compliance with the license */
-/* agreement(s) terms. */
-/* </copyright> */
-/*  */
-/* <summary> */
-/* 	PAL driver for AR6003 */
-/* </summary> */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* PAL driver implementation */
-/* */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// Copyright (c) 2004-2010 Atheros Communications Inc.
+// All rights reserved.
+//
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//
+// Author(s): ="Atheros"
+//------------------------------------------------------------------------------
 
 #include "ar6000_drv.h"
 #ifdef AR6K_ENABLE_HCI_PAL
@@ -51,7 +49,7 @@ typedef struct ar6k_hci_pal_info_s{
 #define HCI_NORMAL_MODE (1)
 #define HCI_REGISTERED (1<<1)
 	struct hci_dev *hdev;            /* BT Stack HCI dev */
-	AR_SOFTC_T *ar;
+	struct ar6_softc *ar;
 
 }ar6k_hci_pal_info_t;
 
@@ -122,9 +120,9 @@ static int btpal_send_frame(struct sk_buff *skb)
 	struct hci_dev *hdev = (struct hci_dev *)skb->dev;
 	HCI_TRANSPORT_PACKET_TYPE type;
 	ar6k_hci_pal_info_t *pHciPalInfo;
-	A_STATUS status = A_OK;
+	int status = 0;
 	struct sk_buff *txSkb = NULL;
-	AR_SOFTC_T *ar;
+	struct ar6_softc *ar;
 
 	if (!hdev) {
 		PRIN_LOG("HCI PAL: btpal_send_frame - no device\n");
@@ -159,7 +157,7 @@ static int btpal_send_frame(struct sk_buff *skb)
 			kfree_skb(skb);
 			return 0;
 		default:
-			A_ASSERT(FALSE);
+			A_ASSERT(false);
 			kfree_skb(skb);
 			return 0;
 	} 
@@ -180,13 +178,13 @@ static int btpal_send_frame(struct sk_buff *skb)
 		{
 			PRIN_LOG("HCI command");
 
-			if (ar->arWmiReady == FALSE)
+			if (ar->arWmiReady == false)
 			{
 				PRIN_LOG("WMI not ready ");
 				break;
 			}
 
-			if (wmi_send_hci_cmd(ar->arWmi, skb->data, skb->len) != A_OK)
+			if (wmi_send_hci_cmd(ar->arWmi, skb->data, skb->len) != 0)
 			{
 				PRIN_LOG("send hci cmd error");
 				break;
@@ -197,7 +195,7 @@ static int btpal_send_frame(struct sk_buff *skb)
 			void *osbuf;
 
 			PRIN_LOG("ACL data");
-			if (ar->arWmiReady == FALSE)
+			if (ar->arWmiReady == false)
 			{
 				PRIN_LOG("WMI not ready");
 				break;
@@ -217,12 +215,12 @@ static int btpal_send_frame(struct sk_buff *skb)
 			bt_cb(txSkb)->pkt_type = bt_cb(skb)->pkt_type;
 			txSkb->dev = (void *)pHciPalInfo->hdev;
 			skb_reserve(txSkb, TX_PACKET_RSV_OFFSET + WMI_MAX_TX_META_SZ + sizeof(WMI_DATA_HDR));
-			A_MEMCPY(txSkb->data, skb->data, skb->len);
+			memcpy(txSkb->data, skb->data, skb->len);
 			skb_put(txSkb,skb->len);
 			/* Add WMI packet type */
 			osbuf = (void *)txSkb;
 
-			if (wmi_data_hdr_add(ar->arWmi, osbuf, DATA_MSGTYPE, 0, WMI_DATA_HDR_DATA_TYPE_ACL,0,NULL) != A_OK) {
+			if (wmi_data_hdr_add(ar->arWmi, osbuf, DATA_MSGTYPE, 0, WMI_DATA_HDR_DATA_TYPE_ACL,0,NULL) != 0) {
 				PRIN_LOG("XIOCTL_ACL_DATA - wmi_data_hdr_add failed\n");
 			} else {
 				/* Send data buffer over HTC */
@@ -231,7 +229,7 @@ static int btpal_send_frame(struct sk_buff *skb)
 			}
 			txSkb = NULL;
 		}
-	} while (FALSE);
+	} while (false);
 
 	if (txSkb != NULL) {
 		PRIN_LOG("Free skb");
@@ -262,22 +260,20 @@ static void bt_cleanup_hci_pal(ar6k_hci_pal_info_t *pHciPalInfo)
 		}          
 	}
 
-	if (pHciPalInfo->hdev != NULL) {
-		kfree(pHciPalInfo->hdev);
-		pHciPalInfo->hdev = NULL;
-	}
+	kfree(pHciPalInfo->hdev);
+	pHciPalInfo->hdev = NULL;
 }
 
 /*********************************************************
  * Allocate HCI device and store in PAL private info structure.
  *********************************************************/
-static A_STATUS bt_setup_hci_pal(ar6k_hci_pal_info_t *pHciPalInfo)
+static int bt_setup_hci_pal(ar6k_hci_pal_info_t *pHciPalInfo)
 {
-	A_STATUS status = A_OK;
+	int status = 0;
 	struct hci_dev *pHciDev = NULL;
 
 	if (!setupbtdev) {
-		return A_OK;    
+		return 0;
 	} 
 
 	do {
@@ -304,9 +300,9 @@ static A_STATUS bt_setup_hci_pal(ar6k_hci_pal_info_t *pHciPalInfo)
 		PRIN_LOG("Normal mode enabled");
 		bt_set_bit(pHciPalInfo->ulFlags, HCI_NORMAL_MODE);
 
-	} while (FALSE);
+	} while (false);
 
-	if (A_FAILED(status)) {
+	if (status) {
 		bt_cleanup_hci_pal(pHciPalInfo);    
 	}
 	return status;
@@ -317,7 +313,7 @@ static A_STATUS bt_setup_hci_pal(ar6k_hci_pal_info_t *pHciPalInfo)
  *********************************************/
 void ar6k_cleanup_hci_pal(void *ar_p)
 {
-	AR_SOFTC_T *ar = (AR_SOFTC_T *)ar_p;
+	struct ar6_softc *ar = (struct ar6_softc *)ar_p;
 	ar6k_hci_pal_info_t *pHciPalInfo = (ar6k_hci_pal_info_t *)ar->hcipal_info;
 
 	if (pHciPalInfo != NULL) {
@@ -330,22 +326,22 @@ void ar6k_cleanup_hci_pal(void *ar_p)
 /****************************
  *  Register HCI device
  ****************************/
-static A_BOOL ar6k_pal_transport_ready(void *pHciPal)
+static bool ar6k_pal_transport_ready(void *pHciPal)
 {
 	ar6k_hci_pal_info_t *pHciPalInfo = (ar6k_hci_pal_info_t *)pHciPal;
 
 	PRIN_LOG("HCI device transport ready");
 	if(pHciPalInfo == NULL)
-		return FALSE;
+		return false;
 
 	if (hci_register_dev(pHciPalInfo->hdev) < 0) {
 		PRIN_LOG("Can't register HCI device");
 		hci_free_dev(pHciPalInfo->hdev);
-		return FALSE;
+		return false;
 	}
 	PRIN_LOG("HCI device registered");
 	pHciPalInfo->ulFlags |= HCI_REGISTERED;
-	return TRUE;
+	return true;
 }
 
 /**************************************************
@@ -353,12 +349,12 @@ static A_BOOL ar6k_pal_transport_ready(void *pHciPal)
  * packet is received. Pass the packet to bluetooth
  * stack via hci_recv_frame.
  **************************************************/
-A_BOOL ar6k_pal_recv_pkt(void *pHciPal, void *osbuf)
+bool ar6k_pal_recv_pkt(void *pHciPal, void *osbuf)
 {
 	struct sk_buff *skb = (struct sk_buff *)osbuf;
 	ar6k_hci_pal_info_t *pHciPalInfo;
-	A_BOOL success = FALSE;
-	A_UINT8 btType = 0;
+	bool success = false;
+	u8 btType = 0;
 	pHciPalInfo = (ar6k_hci_pal_info_t *)pHciPal;
 
 	do {
@@ -393,8 +389,8 @@ A_BOOL ar6k_pal_recv_pkt(void *pHciPal, void *osbuf)
 			PRIN_LOG("HCI PAL: Indicated RCV of type:%d, Length:%d \n",HCI_EVENT_PKT, skb->len);
 		}
 		PRIN_LOG("hci recv success");
-		success = TRUE;
-	}while(FALSE);
+		success = true;
+	}while(false);
 	return success;
 }
 
@@ -404,12 +400,12 @@ A_BOOL ar6k_pal_recv_pkt(void *pHciPal, void *osbuf)
  * Registers a HCI device.
  * Registers packet receive callback function with ar6k 
  **********************************************************/
-A_STATUS ar6k_setup_hci_pal(void *ar_p)
+int ar6k_setup_hci_pal(void *ar_p)
 {
-	A_STATUS status = A_OK;
+	int status = 0;
 	ar6k_hci_pal_info_t *pHciPalInfo;
 	ar6k_pal_config_t ar6k_pal_config;
-	AR_SOFTC_T *ar = (AR_SOFTC_T *)ar_p;
+	struct ar6_softc *ar = (struct ar6_softc *)ar_p;
 
 	do {
 
@@ -425,7 +421,7 @@ A_STATUS ar6k_setup_hci_pal(void *ar_p)
 		pHciPalInfo->ar = ar;
 
 		status = bt_setup_hci_pal(pHciPalInfo);
-		if (A_FAILED(status)) {
+		if (status) {
 			break;    
 		}
 
@@ -437,17 +433,17 @@ A_STATUS ar6k_setup_hci_pal(void *ar_p)
 		ar6k_pal_config.fpar6k_pal_recv_pkt = ar6k_pal_recv_pkt;
 		register_pal_cb(&ar6k_pal_config);
 		ar6k_pal_transport_ready(ar->hcipal_info);
-	} while (FALSE);
+	} while (false);
 
-	if (A_FAILED(status)) {
+	if (status) {
 		ar6k_cleanup_hci_pal(ar);    
 	}
 	return status;
 }
 #else  /* AR6K_ENABLE_HCI_PAL */
-A_STATUS ar6k_setup_hci_pal(void *ar_p)
+int ar6k_setup_hci_pal(void *ar_p)
 {
-	return A_OK;
+	return 0;
 }
 void ar6k_cleanup_hci_pal(void *ar_p)
 {
@@ -459,15 +455,15 @@ void ar6k_cleanup_hci_pal(void *ar_p)
  * Register init and callback function with ar6k
  * when PAL driver is a separate kernel module.
  ****************************************************/
-A_STATUS ar6k_register_hci_pal(HCI_TRANSPORT_CALLBACKS *hciTransCallbacks);
+int ar6k_register_hci_pal(struct hci_transport_callbacks *hciTransCallbacks);
 static int __init pal_init_module(void)
 {
-	HCI_TRANSPORT_CALLBACKS hciTransCallbacks;
+	struct hci_transport_callbacks hciTransCallbacks;
 
 	hciTransCallbacks.setupTransport = ar6k_setup_hci_pal;
 	hciTransCallbacks.cleanupTransport = ar6k_cleanup_hci_pal;
 
-	if(ar6k_register_hci_pal(&hciTransCallbacks) != A_OK)
+	if(ar6k_register_hci_pal(&hciTransCallbacks) != 0)
 		return -ENODEV;
 
 	return 0;
@@ -479,5 +475,5 @@ static void __exit pal_cleanup_module(void)
 
 module_init(pal_init_module);
 module_exit(pal_cleanup_module);
-MODULE_LICENSE("GPL and additional rights");
+MODULE_LICENSE("Dual BSD/GPL");
 #endif

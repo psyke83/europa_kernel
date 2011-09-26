@@ -1,21 +1,25 @@
-/*------------------------------------------------------------------------------ */
-/* <copyright file="ieee80211.h" company="Atheros"> */
-/*    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved. */
-/*  */
-/* This program is free software; you can redistribute it and/or modify */
-/* it under the terms of the GNU General Public License version 2 as */
-/* published by the Free Software Foundation; */
-/* */
-/* Software distributed under the License is distributed on an "AS */
-/* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or */
-/* implied. See the License for the specific language governing */
-/* rights and limitations under the License. */
-/* */
-/* */
-/*------------------------------------------------------------------------------ */
-/*============================================================================== */
-/* Author(s): ="Atheros" */
-/*============================================================================== */
+//------------------------------------------------------------------------------
+// <copyright file="ieee80211.h" company="Atheros">
+//    Copyright (c) 2004-2010 Atheros Corporation.  All rights reserved.
+// 
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+//
+//
+//------------------------------------------------------------------------------
+//==============================================================================
+// Author(s): ="Atheros"
+//==============================================================================
 #ifndef _NET80211_IEEE80211_H_
 #define _NET80211_IEEE80211_H_
 
@@ -64,9 +68,9 @@
 
 
 #define IEEE80211_ADDR_EQ(addr1, addr2)     \
-    (A_MEMCMP(addr1, addr2, IEEE80211_ADDR_LEN) == 0)
+    (memcmp(addr1, addr2, IEEE80211_ADDR_LEN) == 0)
 
-#define IEEE80211_ADDR_COPY(dst,src)    A_MEMCPY(dst,src,IEEE80211_ADDR_LEN)
+#define IEEE80211_ADDR_COPY(dst,src)    memcpy(dst,src,IEEE80211_ADDR_LEN)
 
 #define IEEE80211_KEYBUF_SIZE 16
 #define IEEE80211_MICBUF_SIZE (8+8)  /* space for both tx and rx */
@@ -95,24 +99,24 @@
  * generic definitions for IEEE 802.11 frames
  */
 PREPACK struct ieee80211_frame {
-    A_UINT8    i_fc[2];
-    A_UINT8    i_dur[2];
-    A_UINT8    i_addr1[IEEE80211_ADDR_LEN];
-    A_UINT8    i_addr2[IEEE80211_ADDR_LEN];
-    A_UINT8    i_addr3[IEEE80211_ADDR_LEN];
-    A_UINT8    i_seq[2];
+    u8 i_fc[2];
+    u8 i_dur[2];
+    u8 i_addr1[IEEE80211_ADDR_LEN];
+    u8 i_addr2[IEEE80211_ADDR_LEN];
+    u8 i_addr3[IEEE80211_ADDR_LEN];
+    u8 i_seq[2];
     /* possibly followed by addr4[IEEE80211_ADDR_LEN]; */
     /* see below */
 } POSTPACK;
 
 PREPACK struct ieee80211_qosframe {
-    A_UINT8 i_fc[2];
-    A_UINT8 i_dur[2];
-    A_UINT8 i_addr1[IEEE80211_ADDR_LEN];
-    A_UINT8 i_addr2[IEEE80211_ADDR_LEN];
-    A_UINT8 i_addr3[IEEE80211_ADDR_LEN];
-    A_UINT8 i_seq[2];
-    A_UINT8 i_qos[2];
+    u8 i_fc[2];
+    u8 i_dur[2];
+    u8 i_addr1[IEEE80211_ADDR_LEN];
+    u8 i_addr2[IEEE80211_ADDR_LEN];
+    u8 i_addr3[IEEE80211_ADDR_LEN];
+    u8 i_seq[2];
+    u8 i_qos[2];
 } POSTPACK;
 
 #define IEEE80211_FC0_VERSION_MASK          0x03
@@ -316,29 +320,29 @@ typedef enum {
  * WMM/802.11e Tspec Element
  */
 typedef PREPACK struct wmm_tspec_ie_t {
-    A_UINT8     elementId;
-    A_UINT8     len;
-    A_UINT8     oui[3];
-    A_UINT8     ouiType;
-    A_UINT8     ouiSubType;
-    A_UINT8     version;
-    A_UINT16    tsInfo_info;
-    A_UINT8     tsInfo_reserved;
-    A_UINT16    nominalMSDU;
-    A_UINT16    maxMSDU;
-    A_UINT32    minServiceInt;
-    A_UINT32    maxServiceInt;
-    A_UINT32    inactivityInt;
-    A_UINT32    suspensionInt;
-    A_UINT32    serviceStartTime;
-    A_UINT32    minDataRate;
-    A_UINT32    meanDataRate;
-    A_UINT32    peakDataRate;
-    A_UINT32    maxBurstSize;
-    A_UINT32    delayBound;
-    A_UINT32    minPhyRate;
-    A_UINT16    sba;
-    A_UINT16    mediumTime;
+    u8 elementId;
+    u8 len;
+    u8 oui[3];
+    u8 ouiType;
+    u8 ouiSubType;
+    u8 version;
+    u16 tsInfo_info;
+    u8 tsInfo_reserved;
+    u16 nominalMSDU;
+    u16 maxMSDU;
+    u32 minServiceInt;
+    u32 maxServiceInt;
+    u32 inactivityInt;
+    u32 suspensionInt;
+    u32 serviceStartTime;
+    u32 minDataRate;
+    u32 meanDataRate;
+    u32 peakDataRate;
+    u32 maxBurstSize;
+    u32 delayBound;
+    u32 minPhyRate;
+    u16 sba;
+    u16 mediumTime;
 } POSTPACK WMM_TSPEC_IE;
 
 
