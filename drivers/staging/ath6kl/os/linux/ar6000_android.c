@@ -25,6 +25,9 @@
 #include <linux/vmalloc.h>
 #include <linux/fs.h>
 
+#ifdef CONFIG_HAS_WAKELOCK
+#include <linux/wakelock.h>
+#endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
 #endif
@@ -40,6 +43,11 @@ unsigned int enablelogcat;
 extern int bmienable;
 extern struct net_device *ar6000_devices[];
 extern char ifname[];
+
+#ifdef CONFIG_HAS_WAKELOCK
+extern struct wake_lock ar6k_wow_wake_lock;
+struct wake_lock ar6k_init_wake_lock;
+#endif
 
 const char def_ifname[] = "wlan0";
 module_param_string(fwpath, fwpath, sizeof(fwpath), 0644);
@@ -275,8 +283,14 @@ void android_release_firmware(const struct firmware *firmware)
 static int ar6000_android_avail_ev(void *context, void *hif_handle)
 {
     int ret;
+#ifdef CONFIG_HAS_WAKELOCK
+    wake_lock(&ar6k_init_wake_lock);
+#endif
     ar6000_enable_mmchost_detect_change(0);
     ret = ar6000_avail_ev_p(context, hif_handle);
+#ifdef CONFIG_HAS_WAKELOCK
+    wake_unlock(&ar6k_init_wake_lock);
+#endif
     return ret;
 }
 
@@ -546,6 +560,9 @@ void android_module_init(OSDRV_CALLBACKS *osdrvCallbacks)
     bmienable = 1;
     if (ifname[0] == '\0')
         strcpy(ifname, def_ifname);
+#ifdef CONFIG_HAS_WAKELOCK
+    wake_lock_init(&ar6k_init_wake_lock, WAKE_LOCK_SUSPEND, "ar6k_init");
+#endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
     ar6k_early_suspend.suspend = android_early_suspend;
     ar6k_early_suspend.resume  = android_late_resume;
@@ -563,6 +580,9 @@ void android_module_exit(void)
 {
 #ifdef CONFIG_HAS_EARLYSUSPEND
     unregister_early_suspend(&ar6k_early_suspend);
+#endif
+#ifdef CONFIG_HAS_WAKELOCK
+    wake_lock_destroy(&ar6k_init_wake_lock);
 #endif
     ar6000_enable_mmchost_detect_change(1);
 }
@@ -607,6 +627,9 @@ void android_ar6k_check_wow_status(struct ar6_softc *ar, struct sk_buff *skb, bo
         }
         if (needWake) {
             /* keep host wake up if there is any event and packate comming in*/
+#ifdef CONFIG_HAS_WAKELOCK
+            wake_lock_timeout(&ar6k_wow_wake_lock, 3*HZ);
+#endif
             if (wowledon) {
                 char buf[32];
                 int len = sprintf(buf, "on");
