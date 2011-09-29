@@ -131,7 +131,7 @@ ccflags-y += -DBMIENABLE_SET
 ## BEGIN: Additions for GT-I5500
 ccflags-y += -DANDROID_ENV -D__linux__
 ccflags-y += -DTARGET_EUROPA
-ccflags-y += -DSOFTMAC_FILE
+ccflags-y += -DSOFTMAC_FILE_USED
 ## END: Additions for GT-I5500
 
 CFLAGS_REMOVE_ioctl.o = -Werror
