@@ -235,12 +235,26 @@ wow_not_connected:
         /* fall through */
     default:
         status = ar6000_update_wlan_pwr_state(ar, WLAN_DISABLED, true);
-        if (ar->arWlanPowerState==WLAN_POWER_STATE_ON ||
-            ar->arWlanPowerState==WLAN_POWER_STATE_WOW) {
-            AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("Strange suspend state for not wow mode %d", ar->arWlanPowerState));
+        break;
+    }
+
+    switch (ar->arWlanPowerState) {
+    case WLAN_POWER_STATE_WOW:
+        status = A_EBUSY;
+        break;
+    case WLAN_POWER_STATE_CUT_PWR:
+        /* fall through */
+    case WLAN_POWER_STATE_DEEP_SLEEP:
+        if (!ar->arWlanOff && ar->arWlanPowerState==WLAN_POWER_STATE_CUT_PWR) {
+            status = 0;
+        } else {
+            status = A_EBUSY; /* don't let mmc call sdio_init after resume */
         }
-        AR_DEBUG_PRINTF(ATH_DEBUG_PM,("%s:Suspend for %d mode pwr %d status %d\n", __func__, pmmode, ar->arWlanPowerState, status));
-        status = (ar->arWlanPowerState == WLAN_POWER_STATE_CUT_PWR) ? 0 : A_EBUSY;
+        break;    
+    case WLAN_POWER_STATE_ON:
+        /* fall through */
+    default:
+        AR_DEBUG_PRINTF(ATH_DEBUG_PM, ("Strange suspend state for not wow mode %d", ar->arWlanPowerState));
         break;
     }
 
